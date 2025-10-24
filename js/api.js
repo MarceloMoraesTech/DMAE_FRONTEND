@@ -165,6 +165,7 @@ function transformChartRawData(rawChartData) {
         elipse: {
             historyChartData: { 
                 labels: labels,
+                vazao: vazao,
                 pressao_suc: pressao_suc, 
                 pressao_rec: pressao_rec, 
                 // Mock dos outros campos
