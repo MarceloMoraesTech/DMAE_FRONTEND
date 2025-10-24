@@ -169,6 +169,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentStationData = allStations.find(s => s.id === stationId); 
                 
                 if (currentStationData) {
+
+                    // 1. Garante que as sub-estruturas existam.
+                    currentStationData.zeus = currentStationData.zeus || {};
+                    currentStationData.elipse = currentStationData.elipse || {};
+                    
+                    // 2. Define isReal = true para permitir a renderização dos gráficos na aba 'comparativo' (ui.js).
+                    currentStationData.zeus.isReal = true;
+                    currentStationData.elipse.isReal = true;
+                    
                      if(pageTitle) pageTitle.textContent = currentStationData.name;
                      ui.showStationDetailPage(currentStationData); 
                 } else {
