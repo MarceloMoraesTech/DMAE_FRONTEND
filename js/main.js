@@ -258,14 +258,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             const historicalData = await api.getHistoricalData(currentStationData.id, startDate, endDate);
                             console.log("RESPOSTA COMPLETA DA API:", historicalData);
                             if (historicalData) {
-                                if (historicalData.zeusData && historicalData.zeusData.chartData) {
-                                    currentStationData.zeus.chartData = historicalData.zeusData.chartData;
+                                if (historicalData.zeus && historicalData.zeus.chartData) {
+                                    currentStationData.zeus.chartData = historicalData.zeus.chartData;
                                 } else {
                                     currentStationData.zeus.chartData = { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] };
                                 }
                                 
-                                if (historicalData.elipseData && historicalData.elipseData.historyChartData) {
-                                    currentStationData.elipse.historyChartData = historicalData.elipseData.historyChartData;
+                                if (historicalData.elipse && historicalData.elipse.historyChartData) {
+                                    currentStationData.elipse.historyChartData = historicalData.elipse.historyChartData;
                                 } else {
                                     currentStationData.elipse.historyChartData = { labels: [] };
                                 }
