@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         try {
                             const historicalData = await api.getHistoricalData(currentStationData.id, startDate, endDate);
-                            
+                            console.log("RESPOSTA COMPLETA DA API:", historicalData);
                             if (historicalData) {
                                 if (historicalData.zeusData && historicalData.zeusData.chartData) {
                                     currentStationData.zeus.chartData = historicalData.zeusData.chartData;
