@@ -475,6 +475,8 @@ function renderComparisonControls(station) {
     const hasZeusData = station.zeus?.isReal && labelsZeus.length > 0;
     const hasElipseData = station.elipse?.isReal && labelsElipse.length > 0;
 
+    console.log("DEBUG RENDER: Zeus isReal:", station.zeus?.isReal, "Labels Zeus Length:", labelsZeus.length);
+
     const controlsContainer = document.querySelector('.comparison-variable-selectors');
     if (!hasZeusData && !hasElipseData) {
        if(controlsContainer) controlsContainer.style.display = 'none';

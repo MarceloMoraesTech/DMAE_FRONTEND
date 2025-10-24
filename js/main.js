@@ -247,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tabId = tabLink.dataset.tab;
                 ui.activateTab(tabId);
                 
-                if (tabId === 'comparativo' && currentStationData && (currentStationData.zeus?.isReal || currentStationData.elipse?.isReal)) {
+                if (tabId === 'comparativo' && currentStationData) {
+                    console.log("DEBUG: Chamando renderComparisonCharts diretamente na troca de aba.");
                     ui.renderComparisonCharts(currentStationData);
                 }
             }
