@@ -131,10 +131,7 @@ function normalizeRawDataToStations(rawData) {
     };
 
     // CORREÇÃO: Usando a variável 'backend' importada diretamente
-    return [
-        realStation,
-        ...backend.getAllStations().slice(0, 5) 
-    ];
+    return [realStation];
 }
 /**
  * Função para transformar a resposta bruta de /data/charts na estrutura de ChartData esperada.
