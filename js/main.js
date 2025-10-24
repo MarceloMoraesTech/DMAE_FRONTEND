@@ -258,14 +258,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             const historicalData = await api.getHistoricalData(currentStationData.id, startDate, endDate);
                             
                             if (historicalData) {
-                                if (historicalData.zeusData) {
+                                if (historicalData.zeusData && historicalData.zeusData.chartData) {
                                     currentStationData.zeus.chartData = historicalData.zeusData;
                                 } else {
                                     currentStationData.zeus.chartData = { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] };
                                 }
                                 
-                                if (historicalData.elipseData) {
-                                    currentStationData.elipse.historyChartData = historicalData.elipseData;
+                                if (historicalData.elipseData && historicalData.elipseData.historyChartData) {
+                                    currentStationData.elipse.historyChartData = historicalData.elipseData.historyChartData;
                                 } else {
                                     currentStationData.elipse.historyChartData = { labels: [] };
                                 }
