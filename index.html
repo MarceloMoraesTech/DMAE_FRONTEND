@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard DMAE</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="login-overlay active" id="login-overlay">
+        <div class="login-form">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" value="admin">
+            </div>
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" value="1234">
+            </div>
+            <button class="login-btn" id="login-btn">Entrar</button>
+        </div>
+    </div>
+
+    <div class="container" id="app-container" style="display: none;">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>DMAE</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard Geral
+                </li>
+                <li class="nav-item" data-page="analise">
+                    <i class="fas fa-chart-line"></i> Análise de EBATs
+                </li>
+                <li class="nav-item" data-page="alertas">
+                    <i class="fas fa-bell"></i> Alertas
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <i class="fas fa-upload"></i> Upload de Dados
+                </li>
+            </ul>
+            <div class="stations-list-container">
+                <h3 class="stations-title">Estações de Bombeamento</h3>
+                <ul class="stations-menu" id="stations-menu">
+                    </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h2 id="page-title">Dashboard Geral</h2>
+                <div class="header-controls">
+                    <span class="timestamp" id="timestamp"></span>
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Admin</span>
+                    </div>
+                    <button class="logout-btn" id="logout-btn" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </header>
+
+            <div class="page active" id="dashboard">
+                <div class="kpi-container">
+                    <div class="kpi-card" id="kpi-ebats-card"><div class="kpi-title">EBATs Monitoradas</div><div class="kpi-value" id="kpi-ebats">0</div><div class="kpi-subtitle">Total de estações ativas</div></div>
+
+                    <div class="kpi-card" id="kpi-dados-card">
+                        <div class="kpi-title">Dados Entregues</div>
+                        <div class="kpi-value" id="kpi-dados-percent">0%</div>
+                        <div class="kpi-subtitle">Média de comunicação</div>
+                    </div>
+
+                    <div class="kpi-card" id="kpi-redes-card"><div class="kpi-title">Pressão Média Redes</div><div class="kpi-value" id="kpi-redes">75 <small>mca</small></div><div class="kpi-subtitle">Média da última hora</div></div>
+                    <div class="kpi-card alert-kpi" id="kpi-alertas-card"><div class="kpi-title">Alertas Ativos</div><div class="kpi-value" id="kpi-alertas">0</div><div class="kpi-subtitle">Eventos críticos recentes</div></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card"><div id="map"></div></div>
+                    <div class="card">
+                        <h4>Status de Comunicação</h4>
+                        <div class="chart-container-half"><canvas id="status-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="analise">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Visão Geral das Estações</h3>
+                        <div class="filter-controls" id="status-filter-buttons">
+                             <button class="filter-btn active" data-status="all">Todas</button>
+                             <button class="filter-btn" data-status="normal">Normal</button>
+                             <button class="filter-btn" data-status="atencao">Atenção</button>
+                             <button class="filter-btn" data-status="critico">Crítico</button>
+                        </div>
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-input" placeholder="Buscar estação...">
+                        </div>
+                    </div>
+                    <div class="table-container">
+                         <div class="loading-spinner" id="table-loader"></div>
+                        <table class="data-table">
+                            <thead id="analise-thead">
+                                <tr>
+                                    <th data-sort="name">Estação <i class="fas"></i></th>
+                                    <th data-sort="comm_percent">Comunicação (%) <i class="fas"></i></th>
+                                    <th data-sort="vazao_ult">Vazão Últ. (L/s) <i class="fas"></i></th>
+                                    <th data-sort="vazao_med">Vazão Média (L/s) <i class="fas"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="analise-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="alertas">
+                 <div class="card">
+                    <div class="card-header"><h3>Log de Alertas Recentes</h3></div>
+                    <div class="table-container">
+                        <table class="alert-table">
+                             <thead><tr><th>Data/Hora</th><th>Estação</th><th>Evento</th><th>Status</th></tr></thead>
+                            <tbody id="alertas-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="page" id="upload">
+                <div class="card">
+                    <h3>Upload de Arquivos de Dados</h3>
+                    <p>Selecione os arquivos gerados pelos sistemas ZEUS e Elipse para atualizar os dados.</p>
+                    <div class="form-group">
+                        <label for="file-input-zeus">Arquivo ZEUS (.csv, .xls, .xlsx)</label>
+                        <input type="file" id="file-input-zeus" name="planilha1" accept=".csv,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    </div>
+                     <div class="form-group">
+                        <label for="file-input-elipse">Arquivo Elipse (.csv, .xls, .xlsx)</label>
+                        <input type="file" id="file-input-elipse" name="planilha2" accept=".csv,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    </div>
+                    <button id="upload-btn" class="login-btn" style="width: auto; padding: 10px 20px;">Carregar Arquivos</button>
+                    <p id="upload-status" style="margin-top: 15px;"></p>
+                </div>
+            </div>
+
+            <div class="page" id="detalhe-estacao">
+                <div class="card">
+                    <div class="modal-tabs">
+                        <button class="tab-link active" data-tab="zeus">Dados ZEUS</button>
+                        <button class="tab-link" data-tab="elipse">Diagrama Elipse</button>
+                        <button class="tab-link" data-tab="comparativo">Comparativo</button>
+                        <button class="tab-link" data-tab="siges">Ativos SIGES</button>
+                        <button class="tab-link" data-tab="station-alerts" id="station-alerts-tab-btn" style="display: none;">Alertas da Estação</button>
+                    </div>
+                    <div class="tab-content active" id="modal-zeus-content"></div>
+                    <div class="tab-content" id="modal-elipse-content"></div>
+                    <div class="tab-content" id="modal-siges-content"></div>
+                    <div class="tab-content" id="modal-comparativo-content">
+                        <h4>Comparativo Histórico</h4>
+                        <div class="comparison-controls">
+                            <div class="date-range">
+                                <label for="comp-start-date">De:</label>
+                                <input type="date" id="comp-start-date" placeholder="dd/mm/aaaa">
+                                <label for="comp-end-date">Até:</label>
+                                <input type="date" id="comp-end-date" placeholder="dd/mm/aaaa">
+                                <small style="margin-left: 10px; color: #777;" id="date-filter-info">(Filtro funcional com dados reais)</small>
+                            </div>
+                            <button id="update-comparison-charts-btn" class="update-btn">Atualizar Gráficos</button>
+                        </div>
+
+                        <div class="comparison-variable-selectors">
+                            <div class="form-group comparison-select-group">
+                                 <label for="comp-select-zeus">Selecione a Variável (Zeus):</label>
+                                 <select id="comp-select-zeus">
+                                     <option value="">-- Selecione --</option>
+                                 </select>
+                            </div>
+                             <div class="form-group comparison-select-group">
+                                 <label for="comp-select-elipse">Selecione as Variáveis (Elipse) (Ctrl+Click):</label>
+                                 <select id="comp-select-elipse" multiple size="5">
+                                     </select>
+                            </div>
+                        </div>
+                        <div class="comparison-charts-grid">
+                            <div class="chart-section">
+                                <h5>Dados Históricos ZEUS</h5>
+                                <div class="chart-container" style="height: 350px;"><canvas id="comparison-chart-zeus"></canvas></div>
+                            </div>
+                             <div class="chart-section">
+                                <h5>Dados Históricos ELIPSE</h5>
+                                 <div class="chart-container" style="height: 350px;"><canvas id="comparison-chart-elipse"></canvas></div>
+                            </div>
+                        </div>
+                        </div>
+                    <div class="tab-content" id="modal-station-alerts-content"></div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/upload.js"></script>
+</body>
+</html>
