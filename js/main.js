@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             if (historicalData) {
                                 if (historicalData.zeusData && historicalData.zeusData.chartData) {
-                                    currentStationData.zeus.chartData = historicalData.zeusData;
+                                    currentStationData.zeus.chartData = historicalData.zeusData.chartData;
                                 } else {
                                     currentStationData.zeus.chartData = { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] };
                                 }
