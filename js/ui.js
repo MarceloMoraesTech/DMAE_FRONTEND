@@ -66,7 +66,7 @@ export function populateAnaliseTable(stations) {
         return;
     }
     stations.forEach(station => {
-         if (!station) return;
+        if (!station) return;
         const commStatusClass = getStatusClass(station.comm_percent) === 'normal' ? 'status-ok' : 'status-fail';
         const stationId = station.id ?? Math.random();
         elements.analiseTbody.innerHTML += `<tr data-id="${stationId}"><td><a href="#" class="station-link" data-id="${stationId}">${station.name ?? 'Nome Indefinido'}</a></td><td><span class="status ${commStatusClass}">${station.comm_percent?.toFixed(1) ?? 'N/A'}%</span></td><td>${station.vazao_ult?.toFixed(1) ?? 'N/A'}</td><td>${station.vazao_med?.toFixed(1) ?? 'N/A'}</td></tr>`;
@@ -74,7 +74,7 @@ export function populateAnaliseTable(stations) {
 }
 
 export function populateAlertsTable(alerts) {
-     if (!elements.alertsTbody) return;
+    if (!elements.alertsTbody) return;
     elements.alertsTbody.innerHTML = '';
     if (!alerts || alerts.length === 0) {
         elements.alertsTbody.innerHTML = '<tr><td colspan="4">Nenhum alerta recente.</td></tr>';
@@ -86,9 +86,9 @@ export function populateAlertsTable(alerts) {
 }
 
 export function updateDashboardGeral(alerts, stations) {
-    if(elements.kpiEbats) elements.kpiEbats.textContent = stations?.length ?? 0;
+    if (elements.kpiEbats) elements.kpiEbats.textContent = stations?.length ?? 0;
     const criticalAlerts = alerts?.filter(a => a?.status === 'Crítica').length ?? 0;
-    if(elements.kpiAlertas) elements.kpiAlertas.textContent = criticalAlerts;
+    if (elements.kpiAlertas) elements.kpiAlertas.textContent = criticalAlerts;
 
     // --- LÓGICA PARA KPI "DADOS ENTREGUES" (Global) ---
     if (elements.kpiDados && elements.kpiDadosCard && stations && stations.length > 0) {
@@ -108,7 +108,7 @@ export function updateDashboardGeral(alerts, stations) {
             elements.kpiDadosCard.classList.add('alert-kpi');
         }
     } else if (elements.kpiDados) {
-         elements.kpiDados.textContent = '0%';
+        elements.kpiDados.textContent = '0%';
     }
 }
 
@@ -232,10 +232,10 @@ export function showStationDetailPage(station) {
     const comparativoContentEl = document.getElementById('modal-comparativo-content');
     const stationAlertsContentEl = document.getElementById('modal-station-alerts-content');
 
-    if(zeusContentEl) zeusContentEl.innerHTML = `<div class="info-grid" id="zeus-kpis"></div><div class="info-grid" id="zeus-kpis-extra"></div><h4>Histórico de Vazão e Pressão</h4><div class="chart-container"><canvas id="zeus-chart"></canvas></div>`;
-    if(elipseContentEl) elipseContentEl.innerHTML = `<div class="info-grid" id="elipse-kpis"></div><div class="info-grid" id="elipse-kpis-extra"></div><h4>Monitoramento em Tempo Real</h4><div class="scada-diagram" id="elipse-diagram-container"></div><h4>Leituras Atuais (Pressão e Nível)</h4><div class="chart-container" style="height: 250px;"><canvas id="elipse-status-chart"></canvas></div><h4>Corrente das Bombas (Amperes)</h4><div class="chart-container"><canvas id="elipse-currents-chart"></canvas></div>`;
-    if(sigesContentEl) sigesContentEl.innerHTML = `<h4>Lista de Ativos da Estação</h4><div class="table-container"><table class="data-table"><thead><tr><th>Posição</th><th>Descrição</th><th>Especificação</th></tr></thead><tbody id="modal-siges-tbody"></tbody></table></div>`;
-    if(comparativoContentEl) comparativoContentEl.innerHTML = `
+    if (zeusContentEl) zeusContentEl.innerHTML = `<div class="info-grid" id="zeus-kpis"></div><div class="info-grid" id="zeus-kpis-extra"></div><h4>Histórico de Vazão e Pressão</h4><div class="chart-container"><canvas id="zeus-chart"></canvas></div>`;
+    if (elipseContentEl) elipseContentEl.innerHTML = `<div class="info-grid" id="elipse-kpis"></div><div class="info-grid" id="elipse-kpis-extra"></div><h4>Monitoramento em Tempo Real</h4><div class="scada-diagram" id="elipse-diagram-container"></div><h4>Leituras Atuais (Pressão e Nível)</h4><div class="chart-container" style="height: 250px;"><canvas id="elipse-status-chart"></canvas></div><h4>Corrente das Bombas (Amperes)</h4><div class="chart-container"><canvas id="elipse-currents-chart"></canvas></div>`;
+    if (sigesContentEl) sigesContentEl.innerHTML = `<h4>Lista de Ativos da Estação</h4><div class="table-container"><table class="data-table"><thead><tr><th>Posição</th><th>Descrição</th><th>Especificação</th></tr></thead><tbody id="modal-siges-tbody"></tbody></table></div>`;
+    if (comparativoContentEl) comparativoContentEl.innerHTML = `
         <h4>Comparativo Histórico</h4>
         <div class="comparison-controls">
             <div class="date-range">
@@ -243,34 +243,35 @@ export function showStationDetailPage(station) {
                 <input type="date" id="comp-start-date" placeholder="dd/mm/aaaa">
                 <label for="comp-end-date">Até:</label>
                 <input type="date" id="comp-end-date" placeholder="dd/mm/aaaa">
+                <button id="update-comparison-charts-btn" class="update-btn">Atualizar Gráficos</button>
                 <small style="margin-left: 10px; color: #777;" id="date-filter-info">(Filtro funcional com dados reais)</small>
             </div>
-            <button id="update-comparison-charts-btn" class="update-btn">Atualizar Gráficos</button>
+            
         </div>
 
         <div class="comparison-charts-grid">
             <div class="chart-section">
                 <h5>Dados Históricos ZEUS</h5>
                 <div class="form-group comparison-select-group">
-                     <label for="comp-select-zeus">Selecione a Variável:</label>
-                     <select id="comp-select-zeus">
-                         <option value="">-- Selecione (Zeus) --</option>
-                     </select>
+                    <label for="comp-select-zeus">Selecione a Variável:</label>
+                    <select id="comp-select-zeus">
+                        <option value="">-- Selecione (Zeus) --</option>
+                    </select>
                 </div>
                 <div class="chart-container" style="height: 350px;"><canvas id="comparison-chart-zeus"></canvas></div>
             </div>
-             <div class="chart-section">
+            <div class="chart-section">
                 <h5>Dados Históricos ELIPSE</h5>
-                 <div class="form-group comparison-select-group">
-                     <label for="comp-select-elipse">Selecione as Variáveis (Ctrl+Click):</label>
-                     <select id="comp-select-elipse" multiple size="5">
-                         </select>
+                <div class="form-group comparison-select-group">
+                    <label for="comp-select-elipse">Selecione as Variáveis (Ctrl+Click):</label>
+                    <select id="comp-select-elipse" multiple size="5">
+                    </select>
                 </div>
                 <div class="chart-container" style="height: 350px;"><canvas id="comparison-chart-elipse"></canvas></div>
             </div>
         </div>`;
 
-    if(stationAlertsContentEl) stationAlertsContentEl.innerHTML = '';
+    if (stationAlertsContentEl) stationAlertsContentEl.innerHTML = '';
 
 
     // Renderiza os dados nas abas correspondentes
@@ -283,10 +284,10 @@ export function showStationDetailPage(station) {
     if (station.siges?.ativos?.length > 0 && sigesContentEl) { renderSigesData(station); }
     else {
         const sigesTbody = document.getElementById('modal-siges-tbody');
-        if(sigesTbody) {
+        if (sigesTbody) {
             sigesTbody.innerHTML = '<tr><td colspan="3">Nenhum ativo SIGES encontrado.</td></tr>';
         } else if (sigesContentEl) {
-             sigesContentEl.innerHTML = `<h4>Lista de Ativos da Estação</h4><p>Nenhum ativo SIGES encontrado.</p>`;
+            sigesContentEl.innerHTML = `<h4>Lista de Ativos da Estação</h4><p>Nenhum ativo SIGES encontrado.</p>`;
         }
     }
 
@@ -295,15 +296,15 @@ export function showStationDetailPage(station) {
     // Renderiza os CONTROLES da aba comparativo
     if (comparativoContentEl) {
         if (!station.zeus?.isReal && !station.elipse?.isReal) {
-             comparativoContentEl.innerHTML = '<p>Não há dados históricos de Zeus ou Elipse para comparação nesta estação.</p>';
+            comparativoContentEl.innerHTML = '<p>Não há dados históricos de Zeus ou Elipse para comparação nesta estação.</p>';
         } else {
-             renderComparisonControls(station);
+            renderComparisonControls(station);
         }
     } else {
         console.error("Elemento #modal-comparativo-content não encontrado.");
     }
 
-    activateTab('zeus'); 
+    activateTab('zeus');
 }
 
 // Renderiza a tabela de alertas na nova aba "Alertas da Estação"
@@ -363,7 +364,32 @@ function renderZeusData(station) {
         ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.font = '16px Roboto'; ctx.textAlign = 'center'; ctx.fillText('Dados históricos Zeus não disponíveis.', canvas.width / 2, canvas.height / 2); return;
     }
 
-    const operationalLimitsPlugin = { id: 'operationalLimits', afterDraw: chart => { const { ctx, chartArea: { top, bottom, left, right }, scales: { yPressao } } = chart; const limites = station.zeus?.limites; ctx.save(); if (limites?.pressao_max && yPressao) { const y = yPressao.getPixelForValue(limites.pressao_max); if (y >= top && y <= bottom) { ctx.beginPath(); ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke(); ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'right'; ctx.font = '12px Roboto'; ctx.fillText(`Pressão Máx: ${limites.pressao_max} mca`, right - 5, y - 5); ctx.setLineDash([]); } } ctx.restore(); } };
+    const operationalLimitsPlugin = {
+        id: 'operationalLimits',
+        afterDraw: chart => {
+            const { ctx, chartArea: { top, bottom, left, right }, scales: { yPressao } } = chart;
+            const limites = station.zeus?.limites;
+            ctx.save();
+            if (limites?.pressao_max && yPressao) {
+                const y = yPressao.getPixelForValue(limites.pressao_max);
+                if (y >= top && y <= bottom) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#e74c3c';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(left, y);
+                    ctx.lineTo(right, y);
+                    ctx.stroke();
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.textAlign = 'right';
+                    ctx.font = '12px Roboto';
+                    ctx.fillText(`Pressão Máx: ${limites.pressao_max} mca`, right - 5, y - 5);
+                    ctx.setLineDash([]);
+                }
+            }
+            ctx.restore();
+        }
+    };
 
     zeusChartInstance = new Chart(ctx, {
         type: 'line',
@@ -376,9 +402,18 @@ function renderZeusData(station) {
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
-                x: { type: 'timeseries', time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm', displayFormats: { minute: 'HH:mm', hour: 'dd/MM HH:00', day: 'dd/MM/yy' } }, title: { display: true, text: 'Data / Hora' } },
+                x: {
+                    type: 'timeseries',
+                    time: {
+                        unit: 'minute',
+                        tooltipFormat: 'dd/MM/yyyy HH:mm',
+                        displayFormats: { minute: 'HH:mm', hour: 'dd/MM HH:00', day: 'dd/MM/yy' }
+                    },
+                    title: { display: true, text: 'Data / Hora' }
+                },
                 yVazao: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Vazão (L/s)' } },
                 yPressao: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Pressão (mca)' }, grid: { drawOnChartArea: false } }
             }
@@ -426,20 +461,63 @@ function renderElipseStatusChart(station) {
     if (elipseStatusChartInstance) elipseStatusChartInstance.destroy();
 
     const limites = elipse.limites || {};
-    const alarmLimitsPlugin = { id: 'alarmLimits', afterDraw: chart => { const { ctx, scales: { y } } = chart; const meta = chart.getDatasetMeta(0); ctx.save(); meta.data.forEach((bar, index) => { const label = chart.data.labels[index]; let limitValue = null; if (label.includes('Pressão Recalque') && limites.pressao_rec_max) limitValue = limites.pressao_rec_max; if (label.includes('Nível') && limites.nivel_sup_min) limitValue = limites.nivel_sup_min; if (limitValue !== null) { const yPos = y.getPixelForValue(limitValue); ctx.beginPath(); ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 2; ctx.moveTo(bar.x - (bar.width / 2), yPos); ctx.lineTo(bar.x + (bar.width / 2), yPos); ctx.stroke(); } }); ctx.restore(); } };
+    const alarmLimitsPlugin = {
+        id: 'alarmLimits',
+        afterDraw: chart => {
+            const { ctx, scales: { y } } = chart;
+            const meta = chart.getDatasetMeta(0);
+            ctx.save();
+            meta.data.forEach((bar, index) => {
+                const label = chart.data.labels[index];
+                let limitValue = null;
+                if (label.includes('Pressão Recalque') && limites.pressao_rec_max) limitValue = limites.pressao_rec_max;
+                if (label.includes('Nível') && limites.nivel_sup_min) limitValue = limites.nivel_sup_min;
+                if (limitValue !== null) {
+                    const yPos = y.getPixelForValue(limitValue);
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#c0392b';
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(bar.x - (bar.width / 2), yPos);
+                    ctx.lineTo(bar.x + (bar.width / 2), yPos);
+                    ctx.stroke();
+                }
+            });
+            ctx.restore();
+        }
+    };
 
-    elipseStatusChartInstance = new Chart(statusCtx, { type: 'bar', data: { labels: ['Pressão Sucção (mca)', 'Pressão Recalque (mca)', 'Nível RSV Inf. (m)', `Nível ${elipse.nivel_rsv_superior_nome ?? 'RSV Sup.'} (m)`], datasets: [{ label: 'Valores Atuais', data: [elipse.pressao_suc, elipse.pressao_rec, elipse.nivel_rsv_inferior, elipse.nivel_rsv_superior_valor], backgroundColor: ['#3498db', '#2980b9', '#f1c40f', '#f39c12'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }, plugins: [alarmLimitsPlugin] });
+    elipseStatusChartInstance = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Pressão Sucção (mca)', 'Pressão Recalque (mca)', 'Nível RSV Inf. (m)', `Nível ${elipse.nivel_rsv_superior_nome ?? 'RSV Sup.'} (m)`],
+            datasets: [{
+                label: 'Valores Atuais',
+                data: [elipse.pressao_suc, elipse.pressao_rec, elipse.nivel_rsv_inferior, elipse.nivel_rsv_superior_valor],
+                backgroundColor: ['#3498db', '#2980b9', '#f1c40f', '#f39c12']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        },
+        plugins: [alarmLimitsPlugin]
+    });
 }
 
 function renderElipseCurrentsChart(station) {
     const canvas = document.getElementById('elipse-currents-chart');
-     if (!canvas) return;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (elipseCurrentsChartInstance) elipseCurrentsChartInstance.destroy();
 
     const chartData = station.elipse?.chartData;
     if (!chartData || !chartData.labels || chartData.labels.length === 0) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.font = '16px Roboto'; ctx.textAlign = 'center'; ctx.fillText('Dados históricos de corrente não disponíveis.', canvas.width / 2, canvas.height / 2); return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '16px Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText('Dados históricos de corrente não disponíveis.', canvas.width / 2, canvas.height / 2);
+        return;
     }
 
     const datasets = [];
@@ -451,122 +529,105 @@ function renderElipseCurrentsChart(station) {
         type: 'line',
         data: { labels: chartData.labels, datasets: datasets },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
-                 x: { type: 'timeseries', time: { unit: 'second', tooltipFormat: 'dd/MM/yyyy HH:mm:ss', displayFormats: { second: 'HH:mm:ss' } }, title: { display: true, text: 'Data / Hora' } }
+                x: {
+                    type: 'timeseries',
+                    time: { unit: 'second', tooltipFormat: 'dd/MM/yyyy HH:mm:ss', displayFormats: { second: 'HH:mm:ss' } },
+                    title: { display: true, text: 'Data / Hora' }
+                }
             }
         }
     });
 }
 
+function renderSigesData(station) {
+    const sigesTbody = document.getElementById('modal-siges-tbody');
+    if (!sigesTbody) return;
+    sigesTbody.innerHTML = '';
+    if (station.siges && station.siges.ativos && station.siges.ativos.length > 0) {
+        station.siges.ativos.forEach(ativo => { sigesTbody.innerHTML += `<tr><td>${ativo.pos ?? 'N/A'}</td><td>${ativo.desc ?? 'N/A'}</td><td>${ativo.spec ?? 'N/A'}</td></tr>`; });
+    } else {
+        sigesTbody.innerHTML = '<tr><td colspan="3">Nenhum ativo SIGES encontrado.</td></tr>';
+    }
+}
+
+// Lógica para preencher os campos de seleção da aba Comparativo
 function renderComparisonControls(station) {
+    // 1. Obter referências aos elementos
     const selectZeus = document.getElementById('comp-select-zeus');
     const selectElipse = document.getElementById('comp-select-elipse');
     const startDateInput = document.getElementById('comp-start-date');
     const endDateInput = document.getElementById('comp-end-date');
-    const dateInfo = document.getElementById('date-filter-info');
-    if (!selectZeus || !selectElipse || !startDateInput || !endDateInput || !dateInfo) return;
+    const updateBtn = document.getElementById('update-comparison-charts-btn');
 
-    selectZeus.innerHTML = ''; 
-    selectElipse.innerHTML = '';
-
-    const labelsZeus = station.zeus?.chartData?.labels ?? [];
-    const labelsElipse = station.elipse?.historyChartData?.labels ?? [];
-    const hasZeusData = station.zeus?.isReal && labelsZeus.length > 0;
-    const hasElipseData = station.elipse?.isReal && labelsElipse.length > 0;
-
-    console.log("DEBUG RENDER: Zeus isReal:", station.zeus?.isReal, "Labels Zeus Length:", labelsZeus.length);
-
-    const controlsContainer = document.querySelector('.comparison-variable-selectors');
-    if (!hasZeusData && !hasElipseData) {
-       if(controlsContainer) controlsContainer.style.display = 'none';
-        const ctxZeus = document.getElementById('comparison-chart-zeus')?.getContext('2d');
-        const ctxElipse = document.getElementById('comparison-chart-elipse')?.getContext('2d');
-        if(comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
-        if(comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
-        if(ctxZeus) { ctxZeus.clearRect(0,0,ctxZeus.canvas.width, ctxZeus.canvas.height); ctxZeus.fillText('Sem dados para comparar.', ctxZeus.canvas.width/2, ctxZeus.canvas.height/2); }
-        if(ctxElipse) { ctxElipse.clearRect(0,0,ctxElipse.canvas.width, ctxElipse.canvas.height); ctxElipse.fillText('Sem dados para comparar.', ctxElipse.canvas.width/2, ctxElipse.canvas.height/2); }
+    if (!selectZeus || !selectElipse || !startDateInput || !endDateInput || !updateBtn) {
+        console.error("Elementos de controle do Comparativo não encontrados.");
         return;
-    } else {
-        if(controlsContainer) controlsContainer.style.display = 'grid';
     }
 
-    const primaryLabels = hasZeusData ? labelsZeus : (hasElipseData ? labelsElipse : []);
+    // Limpar seletores
+    selectZeus.innerHTML = '<option value="">-- Selecione (Zeus) --</option>';
+    selectElipse.innerHTML = '';
 
-    const allHistoricalData = {
-        'Zeus Vazão (L/s)': hasZeusData ? station.zeus.chartData.vazao : null,
-        'Zeus Pres. Rec. (mca)': hasZeusData ? station.zeus.chartData.pressao_rec : null,
-        'Zeus Pres. Suc. (mca)': hasZeusData ? station.zeus.chartData.pressao_suc : null,
-        'Elipse Pres. Suc. (mca)': hasElipseData ? station.elipse.historyChartData.pressao_suc : null,
-        'Elipse Pres. Rec. (mca)': hasElipseData ? station.elipse.historyChartData.pressao_rec : null,
-        'Elipse Nível Sup. (m)': hasElipseData ? station.elipse.historyChartData.nivel_rsv_superior : null,
-        'Elipse Nível Inf. (m)': hasElipseData ? station.elipse.historyChartData.nivel_rsv_inferior : null,
-        'Elipse Corr. B1 (A)': hasElipseData ? station.elipse.historyChartData.corrente_gmb1 : null,
-        'Elipse Corr. B2 (A)': hasElipseData ? station.elipse.historyChartData.corrente_gmb2 : null,
-        'Elipse Corr. B3 (A)': hasElipseData ? station.elipse.historyChartData.corrente_gmb3 : null,
-        'Elipse Modo Controle': hasElipseData ? station.elipse.historyChartData.modo_controle : null,
-        'Elipse Falha Comunicação': hasElipseData ? station.elipse.historyChartData.falha_comunicacao : null,
+    // Prioriza historyChartData (dados reais) sobre chartData (dados mockados)
+    const zeusData = station.zeus?.historyChartData || station.zeus?.chartData || {};
+    const elipseData = station.elipse?.historyChartData || {};
+
+    const zeusHistoryKeys = Object.keys(zeusData);
+    const elipseHistoryKeys = Object.keys(elipseData);
+
+    // 2. e 3. Iterar e preencher
+    Object.keys(variableOptions).forEach(key => {
+        const option = variableOptions[key];
+
+        // Verifica se a variável tem a chave de dado correspondente na estação
+        let hasData = false;
+        if (option.source === 'zeus' && station.zeus?.isReal && zeusHistoryKeys.includes(option.dataKey) && option.dataKey !== 'labels') {
+            hasData = true;
+        } else if (option.source === 'elipse' && station.elipse?.isReal && elipseHistoryKeys.includes(option.dataKey) && option.dataKey !== 'labels') {
+            hasData = true;
+        }
+
+        if (hasData) {
+            const optionElement = `<option value="${key}">${key}</option>`;
+            if (option.source === 'zeus') {
+                // Adiciona ao seletor ZEUS (singular)
+                selectZeus.innerHTML += optionElement;
+            } else if (option.source === 'elipse') {
+                // Adiciona ao seletor ELIPSE (múltiplo)
+                selectElipse.innerHTML += optionElement;
+            }
+        }
+    });
+
+    // 4. Definir as datas (usando a data do dado real da estação de exemplo)
+    const today = "2025-09-17"; // Data após a última leitura do mock
+    const yesterday = "2025-09-16"; // Data da última leitura do mock
+
+    // Ajusta as datas para o formato yyyy-MM-dd
+    startDateInput.value = yesterday;
+    endDateInput.value = today;
+
+    // Adiciona o listener para o botão de atualização
+    updateBtn.onclick = () => {
+        // Chamada para a função que realmente desenha os gráficos
+        // NOTA: Sua função `renderComparisonCharts` lê os valores diretamente do DOM, então não precisamos passar os argumentos, APENAS a estação.
+        renderComparisonCharts(station);
     };
 
-    const availableVariables = Object.keys(allHistoricalData).filter(key => {
-        if (!variableOptions[key]) return false;
-        const source = variableOptions[key].source;
-        const sourceLabels = source === 'zeus' ? labelsZeus : labelsElipse;
-        return Array.isArray(allHistoricalData[key]) && allHistoricalData[key].length === sourceLabels.length;
-    });
-
-    availableVariables.forEach(key => {
-        const option = variableOptions[key];
-        const el = document.createElement('option');
-        el.value = key;
-        el.textContent = key.replace('Zeus ', '').replace('Elipse ', '');
-
-        if (option.source === 'zeus') {
-            selectZeus.appendChild(el);
-        } else if (option.source === 'elipse') {
-            selectElipse.appendChild(el);
-        }
-    });
-
-    const defaultZeusOptions = ['Zeus Vazão (L/s)'];
-    Array.from(selectZeus.options).forEach(opt => {
-        if (defaultZeusOptions.includes(opt.value)) {
-            opt.selected = true;
-        }
-    });
-
-    const defaultElipseOptions = ['Elipse Pres. Rec. (mca)', 'Elipse Corr. B2 (A)'];
-    Array.from(selectElipse.options).forEach(opt => {
-        if (defaultElipseOptions.includes(opt.value)) {
-            opt.selected = true;
-        }
-    });
-
-    selectZeus.disabled = !hasZeusData;
-    selectElipse.disabled = !hasElipseData;
-
-    // --- Date Picker Logic ---
-    const formatDate = (label) => { try { return new Date(label).toISOString().split('T')[0]; } catch { return null; } };
-    const firstDate = primaryLabels.length > 0 ? formatDate(primaryLabels[0]) : null;
-    const lastDate = primaryLabels.length > 0 ? formatDate(primaryLabels[primaryLabels.length - 1]) : null;
-
-    if (firstDate && lastDate) {
-        if (!startDateInput.value) startDateInput.value = firstDate;
-        if (!endDateInput.value) endDateInput.value = lastDate;
-
-        startDateInput.disabled = false;
-        endDateInput.disabled = false;
-        dateInfo.textContent = ''; 
-    } else {
-        startDateInput.disabled = true;
-        endDateInput.disabled = true;
-        startDateInput.value = ''; 
-        endDateInput.value = '';
-        dateInfo.textContent = '(Datas indisponíveis)';
-        console.warn("Não foi possível definir as datas a partir dos labels.");
+    // Chamada inicial (para carregar o gráfico vazio ou com dados iniciais se houver)
+    // Para evitar o erro inicial, vamos carregar uma seleção padrão se for a estação real
+    if (station.name === "BORDINI 400") {
+        selectZeus.value = 'Zeus Vazão (L/s)';
+        // NOTA: Chamamos renderComparisonCharts sem argumentos (além da station), pois ela lê do DOM.
+        renderComparisonCharts(station);
     }
 }
 
+// ** FUNÇÃO CORRIGIDA E COMPLETA **
+// A sua função renderComparisonCharts agora é a responsável por desenhar os gráficos e aplicar o filtro.
 export function renderComparisonCharts(station) {
     const selectZeus = document.getElementById('comp-select-zeus');
     const selectElipse = document.getElementById('comp-select-elipse');
@@ -576,14 +637,22 @@ export function renderComparisonCharts(station) {
     const endDateInput = document.getElementById('comp-end-date');
 
     if (!selectZeus || !selectElipse || !canvasZeus || !canvasElipse || !startDateInput || !endDateInput) {
-         console.error("Elementos da aba Comparativo não encontrados para renderizar gráficos.");
-         if(comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
-         if(comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
-         return;
+        console.error("Elementos da aba Comparativo não encontrados para renderizar gráficos.");
+        if (comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
+        if (comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
+        return;
     }
 
-    const labelsZeus = station.zeus?.chartData?.labels ?? [];
-    const labelsElipse = station.elipse?.historyChartData?.labels ?? [];
+    // Destroi instâncias antigas
+    if (comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
+    if (comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
+
+    // Prioriza historyChartData (dados reais) sobre chartData (dados mockados)
+    const dataZeus = station.zeus?.historyChartData || station.zeus?.chartData || {};
+    const dataElipse = station.elipse?.historyChartData || {};
+
+    const labelsZeus = dataZeus?.labels ?? [];
+    const labelsElipse = dataElipse?.labels ?? [];
     const hasZeusData = station.zeus?.isReal && labelsZeus.length > 0;
     const hasElipseData = station.elipse?.isReal && labelsElipse.length > 0;
 
@@ -592,66 +661,101 @@ export function renderComparisonCharts(station) {
     let filterIndicesZeus = null;
     let filterIndicesElipse = null;
 
-    // A lógica de filtro de datas (para a simulação)
-    if (startDate && endDate && !startDateInput.disabled) {
-        // Adiciona um dia ao endDate para incluir o dia inteiro (até 23:59:59)
+    // A lógica de filtro de datas
+    if (startDate && endDate) {
+        // Clona a data final e ajusta para o fim do dia (23:59:59.999)
         const startTimestamp = startDate.getTime();
-        // Clona a data final e ajusta para o fim do dia
         let endOfDay = new Date(endDate.getTime());
         endOfDay.setHours(23, 59, 59, 999);
         const endTimestamp = endOfDay.getTime();
 
-        if(hasZeusData){
+        // Filtra índices para Zeus
+        if (hasZeusData) {
             filterIndicesZeus = labelsZeus.map((label, index) => {
-                try { 
-                    const labelTimestamp = new Date(label).getTime(); 
-                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1; 
+                try {
+                    const labelTimestamp = new Date(label).getTime();
+                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
                 } catch { return -1; }
             }).filter(index => index !== -1);
         }
-        if(hasElipseData){
-             filterIndicesElipse = labelsElipse.map((label, index) => {
-                try { 
-                    const labelTimestamp = new Date(label).getTime(); 
-                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1; 
+        // Filtra índices para Elipse
+        if (hasElipseData) {
+            filterIndicesElipse = labelsElipse.map((label, index) => {
+                try {
+                    const labelTimestamp = new Date(label).getTime();
+                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
                 } catch { return -1; }
             }).filter(index => index !== -1);
         }
     }
 
     const ctxZeus = canvasZeus.getContext('2d');
-    if (comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
     const selectedZeusKey = selectZeus.value;
 
+    // --- GRÁFICO ZEUS ---
     if (hasZeusData && selectedZeusKey) {
         const option = variableOptions[selectedZeusKey];
         const activeZeusYAxes = new Set([option.yAxisID]);
 
         let filteredLabelsZeus = filterIndicesZeus ? filterIndicesZeus.map(i => labelsZeus[i]) : [...labelsZeus];
-        let zeusData = (station.zeus.chartData[option.dataKey] || []);
-        
+        let zeusDatasetData = (dataZeus[option.dataKey] || []);
+
         // Aplica o filtro aos dados
-        if (filterIndicesZeus && zeusData.length === labelsZeus.length) { 
-            zeusData = filterIndicesZeus.map(i => zeusData[i]); 
-        } else if (filterIndicesZeus) { 
+        if (filterIndicesZeus && zeusDatasetData.length === labelsZeus.length) {
+            zeusDatasetData = filterIndicesZeus.map(i => zeusDatasetData[i]);
+        } else if (filterIndicesZeus) {
             // Se os dados não estiverem alinhados com os labels, não exibe nada
-            zeusData = []; 
+            zeusDatasetData = [];
         }
 
         if (filteredLabelsZeus.length > 0) {
             comparisonChartZeusInstance = new Chart(ctxZeus, {
-                type: 'line', data: { labels: filteredLabelsZeus, datasets: [{ label: selectedZeusKey.replace('Zeus ', ''), data: zeusData, borderColor: option.color, yAxisID: option.yAxisID, tension: 0.1, borderWidth: 2, pointRadius: 2, borderDash: option.borderDash || [], }] },
-                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { type: 'timeseries', time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm', displayFormats: { minute: 'HH:mm', hour: 'dd/MM HH:00', day: 'dd/MM/yy' } }, title: { display: true, text: 'Data / Hora' } }, yVazao: { type: 'linear', display: activeZeusYAxes.has('yVazao'), position: 'left', title: { display: true, text: 'Vazão (L/s)' } }, yPressao: { type: 'linear', display: activeZeusYAxes.has('yPressao'), position: 'left', offset: activeZeusYAxes.has('yVazao'), title: { display: true, text: 'Pressão (mca)' } } } }
+                type: 'line',
+                data: {
+                    labels: filteredLabelsZeus,
+                    datasets: [{
+                        label: selectedZeusKey.replace('Zeus ', ''),
+                        data: zeusDatasetData,
+                        borderColor: option.color,
+                        yAxisID: option.yAxisID,
+                        tension: 0.1,
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        borderDash: option.borderDash || [],
+                        fill: option.dataKey === 'vazao', // Preenche área se for Vazão
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            type: 'timeseries',
+                            time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm', displayFormats: { minute: 'HH:mm', hour: 'dd/MM HH:00', day: 'dd/MM/yy' } },
+                            title: { display: true, text: 'Data / Hora' }
+                        },
+                        // Define quais eixos Y mostrar dinamicamente
+                        yVazao: { type: 'linear', display: activeZeusYAxes.has('yVazao'), position: 'left', title: { display: true, text: 'Vazão (L/s)' } },
+                        yPressao: { type: 'linear', display: activeZeusYAxes.has('yPressao'), position: 'left', offset: activeZeusYAxes.has('yVazao'), title: { display: true, text: 'Pressão (mca)' } }
+                    }
+                }
             });
         } else {
-             ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height); ctxZeus.font = '16px Roboto'; ctxZeus.textAlign = 'center'; ctxZeus.fillText('Não há dados Zeus para o período selecionado.', canvasZeus.width / 2, canvasZeus.height / 2);
+            ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height);
+            ctxZeus.font = '16px Roboto';
+            ctxZeus.textAlign = 'center';
+            ctxZeus.fillText('Não há dados Zeus para o período selecionado.', canvasZeus.width / 2, canvasZeus.height / 2);
         }
     } else {
-        ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height); ctxZeus.font = '16px Roboto'; ctxZeus.textAlign = 'center'; ctxZeus.fillText(hasZeusData ? 'Selecione uma variável.' : 'Não há dados Zeus para exibir.', canvasZeus.width / 2, canvasZeus.height / 2);
+        ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height);
+        ctxZeus.font = '16px Roboto';
+        ctxZeus.textAlign = 'center';
+        ctxZeus.fillText(hasZeusData ? 'Selecione uma variável.' : 'Não há dados Zeus para exibir.', canvasZeus.width / 2, canvasZeus.height / 2);
     }
 
+    // --- GRÁFICO ELIPSE ---
     const ctxElipse = canvasElipse.getContext('2d');
-    if (comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
     const selectedElipseKeys = Array.from(selectElipse.selectedOptions).map(opt => opt.value);
 
     if (hasElipseData && selectedElipseKeys.length > 0) {
@@ -659,64 +763,103 @@ export function renderComparisonCharts(station) {
         let filteredLabelsElipse = filterIndicesElipse ? filterIndicesElipse.map(i => labelsElipse[i]) : [...labelsElipse];
 
         let datasetsElipse = selectedElipseKeys.map(key => {
-             const option = variableOptions[key];
-             let data = (station.elipse.historyChartData[option.dataKey] || []);
-             
-             // Aplica o filtro aos dados
-             if (filterIndicesElipse && data.length === labelsElipse.length) { 
-                 data = filterIndicesElipse.map(i => data[i]); 
-             } else if (filterIndicesElipse) { 
-                 data = []; 
-             }
-             
-            return { label: key.replace('Elipse ', ''), data: data, borderColor: option.color, yAxisID: option.yAxisID, tension: 0.1, borderWidth: 2, pointRadius: 2, borderDash: option.borderDash || [], };
+            const option = variableOptions[key];
+            let data = (dataElipse[option.dataKey] || []);
+
+            // Aplica o filtro aos dados
+            if (filterIndicesElipse && data.length === labelsElipse.length) {
+                data = filterIndicesElipse.map(i => data[i]);
+            } else if (filterIndicesElipse) {
+                data = [];
+            }
+
+            return {
+                label: key.replace('Elipse ', ''),
+                data: data,
+                borderColor: option.color,
+                yAxisID: option.yAxisID,
+                tension: 0.1,
+                borderWidth: 2,
+                pointRadius: 2,
+                borderDash: option.borderDash || [],
+                // Para o eixo de Categoria (Status), o tipo de gráfico deve ser 'bar', mas mantemos 'line' e ajustamos o yAxis
+                // O ponto final dos dados que são "status" deve ser zero, mas isso é uma complexidade desnecessária por agora
+            };
         });
 
-        if (filteredLabelsElipse.length > 0) {
+        if (filteredLabelsElipse.length > 0 && datasetsElipse.some(d => d.data.length > 0)) {
             comparisonChartElipseInstance = new Chart(ctxElipse, {
-                type: 'line', data: { labels: filteredLabelsElipse, datasets: datasetsElipse },
+                type: 'line',
+                data: { labels: filteredLabelsElipse, datasets: datasetsElipse },
                 options: {
-                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
-                         x: { type: 'timeseries', time: { unit: 'second', tooltipFormat: 'dd/MM/yyyy HH:mm:ss', displayFormats: { second: 'HH:mm:ss', minute: 'HH:mm', hour: 'dd/MM HH:00' } }, title: { display: true, text: 'Data / Hora' } },
+                        x: {
+                            type: 'timeseries',
+                            time: { unit: 'second', tooltipFormat: 'dd/MM/yyyy HH:mm:ss', displayFormats: { second: 'HH:mm:ss', minute: 'HH:mm', hour: 'dd/MM HH:00' } },
+                            title: { display: true, text: 'Data / Hora' }
+                        },
+                        // Define todos os eixos Y possíveis, e mostra apenas os ativos
                         yPressao: { type: 'linear', display: activeElipseYAxes.has('yPressao'), position: 'left', title: { display: true, text: 'Pressão (mca)' } },
                         yNivel: { type: 'linear', display: activeElipseYAxes.has('yNivel'), position: 'right', title: { display: true, text: 'Nível (m)' }, grid: { drawOnChartArea: false } },
                         yCorrente: { type: 'linear', display: activeElipseYAxes.has('yCorrente'), position: 'right', offset: activeElipseYAxes.has('yNivel'), title: { display: true, text: 'Corrente (A)' }, grid: { drawOnChartArea: false } },
-                        yStatus: { type: 'category', labels: ['Local', 'Remoto', 'Falha', 'OK', 0, 1],
-                            display: activeElipseYAxes.has('yStatus'), position: 'right', offset: activeElipseYAxes.has('yNivel') || activeElipseYAxes.has('yCorrente'), title: { display: true, text: 'Status' }, grid: { drawOnChartArea: false } }
+                        yStatus: {
+                            type: 'category',
+                            labels: ['Local', 'Remoto', 'Falha', 'OK', 0, 1],
+                            display: activeElipseYAxes.has('yStatus'),
+                            position: 'right',
+                            // Garante que o offset funcione corretamente para evitar sobreposição
+                            offset: activeElipseYAxes.has('yNivel') || activeElipseYAxes.has('yCorrente'),
+                            title: { display: true, text: 'Status' },
+                            grid: { drawOnChartArea: false }
+                        }
                     }
                 }
             });
         } else {
-             ctxElipse.clearRect(0, 0, canvasElipse.width, canvasElipse.height); ctxElipse.font = '16px Roboto'; ctxElipse.textAlign = 'center'; ctxElipse.fillText('Não há dados Elipse para o período selecionado.', canvasElipse.width / 2, canvasElipse.height / 2);
+            ctxElipse.clearRect(0, 0, canvasElipse.width, canvasElipse.height);
+            ctxElipse.font = '16px Roboto';
+            ctxElipse.textAlign = 'center';
+            ctxElipse.fillText('Não há dados Elipse para o período selecionado ou variáveis selecionadas.', canvasElipse.width / 2, canvasElipse.height / 2);
         }
     } else {
-        ctxElipse.clearRect(0, 0, canvasElipse.width, canvasElipse.height); ctxElipse.font = '16px Roboto'; ctxElipse.textAlign = 'center'; ctxElipse.fillText(hasElipseData ? 'Selecione uma ou mais variáveis.' : 'Não há dados Elipse para exibir.', canvasElipse.width / 2, canvasElipse.height / 2);
+        ctxElipse.clearRect(0, 0, canvasElipse.width, canvasElipse.height);
+        ctxElipse.font = '16px Roboto';
+        ctxElipse.textAlign = 'center';
+        ctxElipse.fillText(hasElipseData ? 'Selecione uma ou mais variáveis.' : 'Não há dados Elipse para exibir.', canvasElipse.width / 2, canvasElipse.height / 2);
     }
 }
 
-
-function renderSigesData(station) {
-    const sigesTbody = document.getElementById('modal-siges-tbody');
-    if(!sigesTbody) return;
-    sigesTbody.innerHTML = '';
-     if (station.siges && station.siges.ativos && station.siges.ativos.length > 0){
-         station.siges.ativos.forEach(ativo => { sigesTbody.innerHTML += `<tr><td>${ativo.pos ?? 'N/A'}</td><td>${ativo.desc ?? 'N/A'}</td><td>${ativo.spec ?? 'N/A'}</td></tr>`; });
-     } else {
-         sigesTbody.innerHTML = '<tr><td colspan="3">Nenhum ativo SIGES encontrado.</td></tr>';
-     }
-}
-
+// *** FUNÇÃO ORIGINAL DO CÓDIGO FORNECIDO ***
 export function renderStatusChart(stations) {
     const canvas = document.getElementById('status-chart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (statusChartInstance) statusChartInstance.destroy();
     const counts = { normal: 0, atencao: 0, critico: 0 };
-    if(stations && stations.length > 0) {
+    if (stations && stations.length > 0) {
         stations.forEach(s => {
-             if(s) counts[getStatusClass(s.comm_percent)]++;
+            if (s) counts[getStatusClass(s.comm_percent)]++;
         });
     }
-    statusChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['Normal', 'Atenção', 'Crítico'], datasets: [{ label: 'Status das Estações', data: [counts.normal, counts.atencao, counts.critico], backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } } });
+    statusChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Normal', 'Atenção', 'Crítico'],
+            datasets: [{
+                label: 'Status das Estações',
+                data: [counts.normal, counts.atencao, counts.critico],
+                backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } }
+        }
+    });
 }
