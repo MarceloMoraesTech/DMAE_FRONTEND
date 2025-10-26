@@ -133,52 +133,50 @@ function normalizeRawDataToStations(rawData) {
     // CORREÇÃO: Usando a variável 'backend' importada diretamente
     return [realStation];
 }
-/**
- * Função para transformar a resposta bruta de /data/charts na estrutura de ChartData esperada.
-* @param {object} rawChartData - { chart_data: Array de linhas do Zeus, source: "zeus" }
- * @returns {object} { zeus: { chartData: {...} }, elipse: { historyChartData: {...} } }
- */
-function transformChartRawData(rawChartData) {
-    if (!rawChartData || !rawChartData.chart_data || rawChartData.chart_data.length === 0) {
-        return null;
-    }
-    
-    const zeusRows = rawChartData.chart_data;
 
-    // Converte e mapeia os dados, garantindo a conversão de string para float
-    const labels = zeusRows.map(r => r.data_hora);
-    const vazao = zeusRows.map(r => parseFloat(r.vazao_media));
-    const pressao_rec = zeusRows.map(r => parseFloat(r.pressao_recal));
-    const pressao_suc = zeusRows.map(r => parseFloat(r.pressao_succao));
-    
-    // Retorna a estrutura final esperada pela UI
-    return {
-        zeus: {
-            chartData: { 
-                labels: labels,
-                vazao: vazao,
-                pressao_rec: pressao_rec,
-                pressao_suc: pressao_suc,
-            }
-        },
-        // Mock dos dados do Elipse (já que não vêm nesta rota)
-        elipse: {
-            historyChartData: { 
-                labels: labels,
+function transformChartRawData(rawChartData) {
+    if (!rawChartData || !rawChartData.chart_data || rawChartData.chart_data.length === 0) {
+        // CORREÇÃO DE DEBUG: Retornar uma estrutura vazia compatível
+        return {
+            zeus: { chartData: { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] } },
+            elipse: { historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb2: [], corrente_gmb3: [] } }
+        };
+    }
+    
+    const zeusRows = rawChartData.chart_data;
+
+    // Converte e mapeia os dados, garantindo a conversão de string para float
+    const labels = zeusRows.map(r => r.data_hora);
+    
+    // VERIFICAR ESTAS LINHAS: O parseFloat deve funcionar se o separador for ponto.
+    const vazao = zeusRows.map(r => parseFloat(r.vazao_media));
+    const pressao_rec = zeusRows.map(r => parseFloat(r.pressao_recal));
+    const pressao_suc = zeusRows.map(r => parseFloat(r.pressao_succao));
+    
+    // Retorna a estrutura final esperada pela UI
+    return {
+        zeus: {
+            chartData: { 
+                labels: labels,
                 vazao: vazao,
-                pressao_suc: pressao_suc, 
-                pressao_rec: pressao_rec, 
-                // Mock dos outros campos
-                nivel_rsv_superior: labels.map(() => 2.5), 
-                corrente_gmb1: labels.map(() => 0), 
-                corrente_gmb2: labels.map(() => 33.0), 
-                corrente_gmb3: labels.map(() => 33.5), 
-                modo_controle: labels.map(() => 1), 
-                falha_comunicacao: labels.map(() => 0), 
-                nivel_rsv_inferior: labels.map(() => 3.8), 
-            }
-        }
-    };
+                pressao_rec: pressao_rec,
+                pressao_suc: pressao_suc,
+            }
+        },
+        // Mantenha o mapeamento para Elipse historyChartData (ou remova o mock se não precisar)
+        elipse: {
+            historyChartData: { 
+                labels: labels,
+                pressao_suc: pressao_suc, 
+                pressao_rec: pressao_rec, 
+                // Você precisa preencher os outros dados que seu mock gerava, mesmo que com zeros ou valores fixos
+                nivel_rsv_superior: labels.map(() => 2.5), // Exemplo de mock fixo
+                corrente_gmb2: labels.map(() => 33.0), 
+                corrente_gmb3: labels.map(() => 33.5), 
+                // Se a UI usa o campo vazao do historyChartData, adicione aqui
+            }
+        }
+    };
 }
 
 /**
