@@ -253,9 +253,8 @@ export function showStationDetailPage(station) {
             <div class="chart-section">
                 <h5>Dados Históricos ZEUS</h5>
                 <div class="form-group comparison-select-group">
-                    <label for="comp-select-zeus">Selecione a Variável:</label>
-                    <select id="comp-select-zeus">
-                        <option value="">-- Selecione (Zeus) --</option>
+                    <label for="comp-select-zeus">Selecione as Variáveis (Zeus) (Ctrl+Click):</label>
+                    <select id="comp-select-zeus" multiple size="5">
                     </select>
                 </div>
                 <div class="chart-container" style="height: 350px;"><canvas id="comparison-chart-zeus"></canvas></div>
@@ -304,7 +303,7 @@ export function showStationDetailPage(station) {
         console.error("Elemento #modal-comparativo-content não encontrado.");
     }
 
-    activateTab('zeus');
+    activateTab('comparativo');
 }
 
 // Renderiza a tabela de alertas na nova aba "Alertas da Estação"
@@ -568,7 +567,7 @@ function renderComparisonControls(station) {
     }
 
     // Limpar seletores
-    selectZeus.innerHTML = '<option value="">-- Selecione (Zeus) --</option>';
+    selectZeus.innerHTML = '';
     selectElipse.innerHTML = '';
 
     // Prioriza historyChartData (dados reais) sobre chartData (dados mockados)
@@ -618,12 +617,18 @@ function renderComparisonControls(station) {
     };
 
     // Chamada inicial (para carregar o gráfico vazio ou com dados iniciais se houver)
-    // Para evitar o erro inicial, vamos carregar uma seleção padrão se for a estação real
     if (station.name === "BORDINI 400") {
-        selectZeus.value = 'Zeus Vazão (L/s)';
-        // NOTA: Chamamos renderComparisonCharts sem argumentos (além da station), pois ela lê do DOM.
-        renderComparisonCharts(station);
+        // Tenta pré-selecionar a opção no multi-select
+        const zeusOptions = selectZeus.options;
+        for (let i = 0; i < zeusOptions.length; i++) {
+            if (zeusOptions[i].value === 'Zeus Vazão (L/s)') {
+                zeusOptions[i].selected = true;
+                break;
+            }
+        }
     }
+    // Sempre chama renderComparisonCharts para desenhar o estado inicial (vazio ou com dados)
+    renderComparisonCharts(station);
 }
 
 // ** FUNÇÃO CORRIGIDA E COMPLETA **
@@ -690,40 +695,43 @@ export function renderComparisonCharts(station) {
     }
 
     const ctxZeus = canvasZeus.getContext('2d');
-    const selectedZeusKey = selectZeus.value;
+    const selectedZeusKeys = Array.from(selectZeus.selectedOptions).map(opt => opt.value);
 
     // --- GRÁFICO ZEUS ---
-    if (hasZeusData && selectedZeusKey) {
-        const option = variableOptions[selectedZeusKey];
-        const activeZeusYAxes = new Set([option.yAxisID]);
-
+    if (hasZeusData && selectedZeusKeys.length > 0) {
+        const activeZeusYAxes = new Set(selectedZeusKeys.map(key => variableOptions[key].yAxisID));
         let filteredLabelsZeus = filterIndicesZeus ? filterIndicesZeus.map(i => labelsZeus[i]) : [...labelsZeus];
-        let zeusDatasetData = (dataZeus[option.dataKey] || []);
 
-        // Aplica o filtro aos dados
-        if (filterIndicesZeus && zeusDatasetData.length === labelsZeus.length) {
-            zeusDatasetData = filterIndicesZeus.map(i => zeusDatasetData[i]);
-        } else if (filterIndicesZeus) {
-            // Se os dados não estiverem alinhados com os labels, não exibe nada
-            zeusDatasetData = [];
-        }
+        let datasetsZeus = selectedZeusKeys.map(key => {
+            const option = variableOptions[key];
+            let data = (dataZeus[option.dataKey] || []);
 
-        if (filteredLabelsZeus.length > 0) {
+            // Aplica o filtro aos dados
+            if (filterIndicesZeus && data.length === labelsZeus.length) {
+                data = filterIndicesZeus.map(i => data[i]);
+            } else if (filterIndicesZeus) {
+                data = [];
+            }
+
+            return {
+                label: key.replace('Zeus ', ''),
+                data: data,
+                borderColor: option.color,
+                yAxisID: option.yAxisID,
+                tension: 0.1,
+                borderWidth: 2,
+                pointRadius: 2,
+                borderDash: option.borderDash || [],
+                fill: option.dataKey === 'vazao', // Preenche área se for Vazão
+            };
+        });
+        
+        if (filteredLabelsZeus.length > 0 && datasetsZeus.some(d => d.data.length > 0)) {
             comparisonChartZeusInstance = new Chart(ctxZeus, {
                 type: 'line',
                 data: {
                     labels: filteredLabelsZeus,
-                    datasets: [{
-                        label: selectedZeusKey.replace('Zeus ', ''),
-                        data: zeusDatasetData,
-                        borderColor: option.color,
-                        yAxisID: option.yAxisID,
-                        tension: 0.1,
-                        borderWidth: 2,
-                        pointRadius: 2,
-                        borderDash: option.borderDash || [],
-                        fill: option.dataKey === 'vazao', // Preenche área se for Vazão
-                    }]
+                    datasets: datasetsZeus
                 },
                 options: {
                     responsive: true,
@@ -751,7 +759,7 @@ export function renderComparisonCharts(station) {
         ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height);
         ctxZeus.font = '16px Roboto';
         ctxZeus.textAlign = 'center';
-        ctxZeus.fillText(hasZeusData ? 'Selecione uma variável.' : 'Não há dados Zeus para exibir.', canvasZeus.width / 2, canvasZeus.height / 2);
+        ctxZeus.fillText(hasZeusData ? 'Selecione uma ou mais variáveis.' : 'Não há dados Zeus para exibir.', canvas.width / 2, canvasZeus.height / 2);
     }
 
     // --- GRÁFICO ELIPSE ---

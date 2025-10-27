@@ -158,16 +158,16 @@
             <div class="page" id="detalhe-estacao">
                 <div class="card">
                     <div class="modal-tabs">
-                        <button class="tab-link active" data-tab="zeus">Dados ZEUS</button>
+                        <button class="tab-link active" data-tab="comparativo">Comparativo</button>
+                        <button class="tab-link" data-tab="zeus">Dados ZEUS</button>
                         <button class="tab-link" data-tab="elipse">Diagrama Elipse</button>
-                        <button class="tab-link" data-tab="comparativo">Comparativo</button>
                         <button class="tab-link" data-tab="siges">Ativos SIGES</button>
                         <button class="tab-link" data-tab="station-alerts" id="station-alerts-tab-btn" style="display: none;">Alertas da Estação</button>
                     </div>
-                    <div class="tab-content active" id="modal-zeus-content"></div>
+                    <div class="tab-content" id="modal-zeus-content"></div>
                     <div class="tab-content" id="modal-elipse-content"></div>
                     <div class="tab-content" id="modal-siges-content"></div>
-                    <div class="tab-content" id="modal-comparativo-content">
+                    <div class="tab-content active" id="modal-comparativo-content">
                         <h4>Comparativo Histórico</h4>
                         <div class="comparison-controls">
                             <div class="date-range">
@@ -182,9 +182,8 @@
 
                         <div class="comparison-variable-selectors">
                             <div class="form-group comparison-select-group">
-                                 <label for="comp-select-zeus">Selecione a Variável (Zeus):</label>
-                                 <select id="comp-select-zeus">
-                                     <option value="">-- Selecione --</option>
+                                 <label for="comp-select-zeus">Selecione as Variáveis (Zeus) (Ctrl+Click):</label>
+                                 <select id="comp-select-zeus" multiple size="5">
                                  </select>
                             </div>
                              <div class="form-group comparison-select-group">
