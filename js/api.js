@@ -323,25 +323,68 @@ export async function fetchAllAlerts() {
 }
 
 /**
- * PONTO de ATENÇÃO: Nenhum link foi passado para o Upload.
- * Esta função CONTINUA USANDO O SIMULADOR.
+ * PONTO CORRIGIDO: Agora usa a API REAL para fazer o upload.
+ * @param {File} zeusFile - O objeto File do input ZEUS.
+ * @param {File} elipseFile - O objeto File do input ELIPSE.
  */
 export async function uploadData(zeusData, elipseData) {
-    console.warn("Usando SIMULADOR: uploadData (Nenhum link de API real foi fornecido)");
+  console.log("Usando API REAL: uploadData");
     
-    // Simula o backend processando os dados
-    return new Promise(resolve => {
-        setTimeout(() => {
-            let zeusRows = zeusData && zeusData.data ? zeusData.data.length : 0;
-            let elipseRows = elipseData && elipseData.data ? elipseData.data.length : 0;
+    // 1. Cria o objeto FormData
+    const formData = new FormData();
+    
+    // 2. Anexa os arquivos usando os nomes de campo EXATOS do backend (multer.fields)
+    // O backend espera 'zeusFile' e 'elipseFile'
+    if (zeusFile) {
+        formData.append('zeusFile', zeusFile);
+    }
+    
+    if (elipseFile) {
+        formData.append('elipseFile', elipseFile);
+    }
 
-            console.log("SIMULADOR: Recebido", zeusRows, "linhas de dados Zeus.");
-            console.log("SIMULADOR: Recebido", elipseRows, "linhas de dados Elipse.");
+    if (!zeusFile && !elipseFile) {
+        return { 
+            success: false, 
+            message: "É necessário selecionar pelo menos um arquivo para upload." 
+        };
+    }
 
-            resolve({ 
-                success: true, 
-                message: `Dados recebidos: ${zeusRows} linhas (Zeus) e ${elipseRows} linhas (Elipse).` 
-            });
-        }, 1000); 
-    });
+    try {
+        const url = `${API_BASE_URL}/upload`; // Endpoint: /api/upload
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            // NÃO DEFIINA 'Content-Type': o browser fará isso automaticamente para FormData
+            body: formData, 
+        });
+
+        // 3. Trata a resposta da API (200 OK ou 400/422/500)
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Se o status for 4xx ou 5xx, trata o erro
+            console.error("Erro no upload (API Real):", data);
+            // Retorna o objeto de erro da API para ser exibido na UI
+            return { 
+                success: false, 
+                message: data.error || data.message || `Erro desconhecido (${response.status})` 
+            };
+        }
+
+        // 4. Sucesso (Status 200 OK)
+        console.log("Upload bem-sucedido (API Real):", data);
+        return { 
+            success: true, 
+            message: data.message,
+            details: data.processados // Opcional, para mostrar o que foi processado
+        };
+
+    } catch (error) {
+        console.error("Erro de rede/conexão ao fazer upload:", error);
+        return { 
+            success: false, 
+            message: "Falha de conexão com o servidor de upload." 
+        };
+    }
 }
