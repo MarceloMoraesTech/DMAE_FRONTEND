@@ -96,7 +96,7 @@ async function fetchFaturamentoForMonth(mesAno) {
  * @param {Array<Object>} faturamentoData - Dados do endpoint /data/faturamento-status
  * @returns {Array<Object>} O Array de estações no formato esperado pela UI.
  */
-function normalizeRawDataToStations(rawData) {
+function normalizeRawDataToStations(rawData, faturamentoData = []) {
     const { planilha_zeus, planilha_elipse } = rawData;
     
     // 1. Agregação dos KPIs
