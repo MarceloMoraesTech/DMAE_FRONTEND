@@ -327,7 +327,7 @@ export async function fetchAllAlerts() {
  * @param {File} zeusFile - O objeto File do input ZEUS.
  * @param {File} elipseFile - O objeto File do input ELIPSE.
  */
-export async function uploadData(zeusData, elipseData) {
+export async function uploadData(zeusFile, elipseFile) {
   console.log("Usando API REAL: uploadData");
     
     // 1. Cria o objeto FormData

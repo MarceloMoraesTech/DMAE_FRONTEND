@@ -91,40 +91,34 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadBtn.disabled = true;
 
             try {
-                // Processa os dois arquivos em paralelo.
-                const [zeusResult, elipseResult] = await Promise.allSettled([
-                    parseFile(fileZeus),
-                    parseFile(fileElipse)
-                ]);
+                // REMOVIDO: parseFile e Promise.allSettled. A extração é responsabilidade do backend.
 
-                const zeusData = zeusResult.status === 'fulfilled' ? zeusResult.value : null;
-                const elipseData = elipseResult.status === 'fulfilled' ? elipseResult.value : null;
+                uploadStatus.textContent = "Enviando arquivos para o servidor...";
+                
+                // CORREÇÃO PRINCIPAL: Envia os objetos File (fileZeus, fileElipse) para a API.
+                const apiResponse = await api.uploadData(fileZeus, fileElipse);
 
-                if (zeusResult.status === 'rejected') throw zeusResult.reason;
-                if (elipseResult.status === 'rejected') throw elipseResult.reason;
+                if (apiResponse.success) {
+                    // Inclua os detalhes de processamento (se o backend retornar)
+                    const details = apiResponse.details 
+                        ? ` (Zeus: ${apiResponse.details.zeus}, Elipse: ${apiResponse.details.elipse})` 
+                        : '';
+                    
+                    uploadStatus.textContent = `Sucesso! ${apiResponse.message}${details}`;
+                    uploadStatus.style.color = "var(--success-color)";
+                    fileInputZeus.value = "";
+                    fileInputElipse.value = "";
+                } else {
+                    // A API retornou 4XX ou 5XX
+                    throw new Error(apiResponse.message || "A API retornou um erro.");
+                }
 
-                uploadStatus.textContent = "Enviando dados para o servidor...";
-                
-                // Envia os dados processados (JSON) para a API simulada
-                const apiResponse = await api.uploadData(zeusData, elipseData);
-
-                if (apiResponse.success) {
-                    uploadStatus.textContent = `Sucesso! (Simulado) ${apiResponse.message}`;
-                    uploadStatus.style.color = "var(--success-color)";
-                    fileInputZeus.value = "";
-                    fileInputElipse.value = "";
-                } else {
-                    throw new Error(apiResponse.message || "A API retornou um erro.");
-                }
-
-            } catch (error) {
-                console.error("Erro no processo de upload:", error);
-                uploadStatus.textContent = `Erro: ${error.message}`;
-                uploadStatus.style.color = "var(--error-color)";
-            } finally {
-                uploadBtn.disabled = false;
-            }
-        });
+            } catch (error) {
+                // ... (tratamento de erro)
+            } finally {
+                // ... (finalização)
+            }
+        });
     }
 
     // Função para atualizar o status ao selecionar arquivos
