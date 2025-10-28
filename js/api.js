@@ -95,7 +95,7 @@ function normalizeRawDataToStations(rawData) {
         id: realStationId, 
         name: realStationName, 
         lat: -30.03, lon: -51.20, // Mock Lat/Lon
-        comm_percent: planilha_zeus.length > 0 ? 100 : 0, 
+        comm_percent: planilha_zeus.length > 0 ? 90 : 0, 
         
         // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
         vazao_ult: zeusAggregated.vazao_ult, 
