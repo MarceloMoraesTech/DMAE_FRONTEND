@@ -73,10 +73,27 @@ function aggregateElipseData(elipseRows) {
     };
 }
 
+// Função que busca dados da porcentagem entregue
+async function fetchFaturamentoForMonth(mesAno) {
+    const url = `${API_BASE_URL}/data/faturamento-status?mes_ano=${mesAno}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error("Erro ao buscar faturamento:", response.status, response.statusText);
+            return [];
+        }
+        const data = await response.json();
+        return data; // Retorna o array de faturamento para todas as estações
+    } catch (error) {
+        console.error("Erro de rede ao buscar faturamento:", error);
+        return [];
+    }
+}
 
 /**
  * Função ESSENCIAL para transformar a resposta do DB na estrutura da UI (Array de Estações).
  * @param {object} rawData - { planilha_zeus: [...], planilha_elipse: [...] }
+ * @param {Array<Object>} faturamentoData - Dados do endpoint /data/faturamento-status
  * @returns {Array<Object>} O Array de estações no formato esperado pela UI.
  */
 function normalizeRawDataToStations(rawData) {
@@ -89,13 +106,25 @@ function normalizeRawDataToStations(rawData) {
     // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
     const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
     const realStationId = 9999; 
+
+    // Busca o dado de faturamento para esta estação específica
+    const faturamentoItem = faturamentoData.find(item => item.Estacao === realStationName);
     
+    let percentualComms = planilha_zeus.length > 0 ? 90 : 0; // Valor de fallback/Mock (diário)
+    
+    if (faturamentoItem && faturamentoItem.PercentualComms) {
+        // Pega a string '31.56%', remove o '%' e converte para número (31.56)
+        percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''));
+    }
+    
+
     // 3. Criação da Estação Mestra (Agregada)
     const realStation = {
         id: realStationId, 
         name: realStationName, 
         lat: -30.03, lon: -51.20, // Mock Lat/Lon
-        comm_percent: planilha_zeus.length > 0 ? 90 : 0, 
+        comm_percent: percentualComms,
+        faturamento: faturamentoItem,
         
         // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
         vazao_ult: zeusAggregated.vazao_ult, 
@@ -206,12 +235,18 @@ export async function fetchAllStations() {
     console.log("Usando API REAL: fetchAllStations");
     
     try {
-        const response = await fetch(`${API_BASE_URL}/data/all`);
-        if (!response.ok) {
-            throw new Error(`Erro na API (${response.status}): ${response.statusText}`);
+        // Faz as duas chamadas em paralelo (melhor performance)
+        const [allDataResponse, faturamentoData] = await Promise.all([
+            fetch(`${API_BASE_URL}/data/all`),
+            fetchFaturamentoForMonth('2025-09') // <-- Use o mês/ano que deseja faturar
+        ]);
+
+        if (!allDataResponse.ok) {
+            throw new Error(`Erro na API ALL (${allDataResponse.status}): ${allDataResponse.statusText}`);
         }
-        const data = await response.json();
+        const data = await allDataResponse.json();
         console.log("Dados recebidos de /data/all:", data);
+        console.log("Dados de faturamento recebidos:", faturamentoData);
         
         // CORREÇÃO: Chama a função de normalização
         return normalizeRawDataToStations(data);
