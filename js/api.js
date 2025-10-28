@@ -257,7 +257,7 @@ export async function fetchAllStations() {
         console.log("Dados de faturamento recebidos:", faturamentoData);
         
         // CORREÇÃO: Chama a função de normalização
-        return normalizeRawDataToStations(data);
+        return normalizeRawDataToStations(data, faturamentoData);
 
     } catch (error) {
         console.error("Erro em fetchAllStations (API Real):", error);
