@@ -759,7 +759,7 @@ export function renderComparisonCharts(station) {
         ctxZeus.clearRect(0, 0, canvasZeus.width, canvasZeus.height);
         ctxZeus.font = '16px Roboto';
         ctxZeus.textAlign = 'center';
-        ctxZeus.fillText(hasZeusData ? 'Selecione uma ou mais variáveis.' : 'Não há dados Zeus para exibir.', canvas.width / 2, canvasZeus.height / 2);
+        ctxZeus.fillText(hasZeusData ? 'Selecione uma ou mais variáveis.' : 'Não há dados Zeus para exibir.', canvasZeus.width / 2, canvasZeus.height / 2);
     }
 
     // --- GRÁFICO ELIPSE ---
