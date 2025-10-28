@@ -106,11 +106,12 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
     // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
     const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
     const realStationId = 9999; 
+    console.log(realStationName, 'real station name')
 
     // Busca o dado de faturamento para esta estação específica
     const faturamentoItem = faturamentoData.find(item => item.Estacao === realStationName);
     
-    let percentualComms = planilha_zeus.length > 0 ? 90 : 0; // Valor de fallback/Mock (diário)
+    let percentualComms = planilha_zeus.length > 0 ? 90 : 0; 
     
     if (faturamentoItem && faturamentoItem.PercentualComms) {
         // Pega a string '31.56%', remove o '%' e converte para número (31.56)
