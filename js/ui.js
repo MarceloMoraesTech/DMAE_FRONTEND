@@ -253,7 +253,7 @@ export function showStationDetailPage(station) {
             <div class="chart-section">
                 <h5>Dados Históricos ZEUS</h5>
                 <div class="form-group comparison-select-group">
-                    <label for="comp-select-zeus">Selecione as Variáveis (Zeus) (Ctrl+Click):</label>
+                    <label for="comp-select-zeus">Selecione as Variáveis (Zeus)</label>
                     <select id="comp-select-zeus" multiple size="5">
                     </select>
                 </div>
@@ -262,7 +262,7 @@ export function showStationDetailPage(station) {
             <div class="chart-section">
                 <h5>Dados Históricos ELIPSE</h5>
                 <div class="form-group comparison-select-group">
-                    <label for="comp-select-elipse">Selecione as Variáveis (Ctrl+Click):</label>
+                    <label for="comp-select-elipse">Selecione as Variáveis (Elipse)</label>
                     <select id="comp-select-elipse" multiple size="5">
                     </select>
                 </div>
@@ -554,35 +554,33 @@ function renderSigesData(station) {
 
 // Lógica para preencher os campos de seleção da aba Comparativo
 function renderComparisonControls(station) {
-    // 1. Obter referências aos elementos
-    const selectZeus = document.getElementById('comp-select-zeus');
-    const selectElipse = document.getElementById('comp-select-elipse');
+    // 1. Obter referências aos containers
+    const containerZeus = document.getElementById('comp-select-zeus');
+    const containerElipse = document.getElementById('comp-select-elipse');
     const startDateInput = document.getElementById('comp-start-date');
     const endDateInput = document.getElementById('comp-end-date');
     const updateBtn = document.getElementById('update-comparison-charts-btn');
 
-    if (!selectZeus || !selectElipse || !startDateInput || !endDateInput || !updateBtn) {
+    if (!containerZeus || !containerElipse || !startDateInput || !endDateInput || !updateBtn) {
         console.error("Elementos de controle do Comparativo não encontrados.");
         return;
     }
 
-    // Limpar seletores
-    selectZeus.innerHTML = '';
-    selectElipse.innerHTML = '';
+    // Limpar containers
+    containerZeus.innerHTML = '';
+    containerElipse.innerHTML = '';
 
-    // Prioriza historyChartData (dados reais) sobre chartData (dados mockados)
     const zeusData = station.zeus?.historyChartData || station.zeus?.chartData || {};
     const elipseData = station.elipse?.historyChartData || {};
-
     const zeusHistoryKeys = Object.keys(zeusData);
     const elipseHistoryKeys = Object.keys(elipseData);
 
-    // 2. e 3. Iterar e preencher
-    Object.keys(variableOptions).forEach(key => {
+    // 2. e 3. Iterar sobre as opções de variáveis e criar checkboxes
+    Object.keys(variableOptions).forEach((key, index) => {
         const option = variableOptions[key];
-
-        // Verifica se a variável tem a chave de dado correspondente na estação
         let hasData = false;
+        
+        // Verifica se há dados para essa variável na estação atual
         if (option.source === 'zeus' && station.zeus?.isReal && zeusHistoryKeys.includes(option.dataKey) && option.dataKey !== 'labels') {
             hasData = true;
         } else if (option.source === 'elipse' && station.elipse?.isReal && elipseHistoryKeys.includes(option.dataKey) && option.dataKey !== 'labels') {
@@ -590,58 +588,60 @@ function renderComparisonControls(station) {
         }
 
         if (hasData) {
-            const optionElement = `<option value="${key}">${key}</option>`;
+            // Cria os elementos do checkbox
+            const checkboxId = `comp-var-${option.source}-${index}`;
+            const checkboxWrapper = document.createElement('div');
+            checkboxWrapper.classList.add('checkbox-item'); // Classe para estilização
+
+            // Estrutura do HTML para cada item
+            checkboxWrapper.innerHTML = `
+                <input type="checkbox" id="${checkboxId}" name="${option.source}-variable" value="${key}">
+                <label for="${checkboxId}">${key}</label>
+            `;
+            
+            // Adiciona o checkbox ao container correto (Zeus ou Elipse)
             if (option.source === 'zeus') {
-                // Adiciona ao seletor ZEUS (singular)
-                selectZeus.innerHTML += optionElement;
+                containerZeus.appendChild(checkboxWrapper);
             } else if (option.source === 'elipse') {
-                // Adiciona ao seletor ELIPSE (múltiplo)
-                selectElipse.innerHTML += optionElement;
+                containerElipse.appendChild(checkboxWrapper);
             }
         }
     });
 
-    // 4. Definir as datas (usando a data do dado real da estação de exemplo)
-    const today = "2025-09-17"; // Data após a última leitura do mock
-    const yesterday = "2025-09-16"; // Data da última leitura do mock
-
-    // Ajusta as datas para o formato yyyy-MM-dd
+    // Define as datas padrão
+    const today = "2025-09-17";
+    const yesterday = "2025-09-16";
     startDateInput.value = yesterday;
     endDateInput.value = today;
 
-    // Adiciona o listener para o botão de atualização
+    // Adiciona o evento de clique ao botão de atualizar
     updateBtn.onclick = () => {
-        // Chamada para a função que realmente desenha os gráficos
-        // NOTA: Sua função `renderComparisonCharts` lê os valores diretamente do DOM, então não precisamos passar os argumentos, APENAS a estação.
         renderComparisonCharts(station);
     };
 
-    // Chamada inicial (para carregar o gráfico vazio ou com dados iniciais se houver)
+    // Pré-seleciona a opção "Vazão" para a estação específica, se for o caso
     if (station.name === "BORDINI 400") {
-        // Tenta pré-selecionar a opção no multi-select
-        const zeusOptions = selectZeus.options;
-        for (let i = 0; i < zeusOptions.length; i++) {
-            if (zeusOptions[i].value === 'Zeus Vazão (L/s)') {
-                zeusOptions[i].selected = true;
-                break;
-            }
+        const checkboxToSelect = containerZeus.querySelector('input[value="Zeus Vazão (L/s)"]');
+        if (checkboxToSelect) {
+            checkboxToSelect.checked = true;
         }
     }
-    // Sempre chama renderComparisonCharts para desenhar o estado inicial (vazio ou com dados)
+    
+    // Renderiza os gráficos com a seleção inicial
     renderComparisonCharts(station);
 }
 
 // ** FUNÇÃO CORRIGIDA E COMPLETA **
 // A sua função renderComparisonCharts agora é a responsável por desenhar os gráficos e aplicar o filtro.
 export function renderComparisonCharts(station) {
-    const selectZeus = document.getElementById('comp-select-zeus');
-    const selectElipse = document.getElementById('comp-select-elipse');
+    const containerZeus = document.getElementById('comp-select-zeus');
+    const containerElipse = document.getElementById('comp-select-elipse');
     const canvasZeus = document.getElementById('comparison-chart-zeus');
     const canvasElipse = document.getElementById('comparison-chart-elipse');
     const startDateInput = document.getElementById('comp-start-date');
     const endDateInput = document.getElementById('comp-end-date');
 
-    if (!selectZeus || !selectElipse || !canvasZeus || !canvasElipse || !startDateInput || !endDateInput) {
+    if (!containerZeus || !containerElipse || !canvasZeus || !canvasElipse || !startDateInput || !endDateInput) {
         console.error("Elementos da aba Comparativo não encontrados para renderizar gráficos.");
         if (comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
         if (comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
@@ -652,7 +652,6 @@ export function renderComparisonCharts(station) {
     if (comparisonChartZeusInstance) comparisonChartZeusInstance.destroy();
     if (comparisonChartElipseInstance) comparisonChartElipseInstance.destroy();
 
-    // Prioriza historyChartData (dados reais) sobre chartData (dados mockados)
     const dataZeus = station.zeus?.historyChartData || station.zeus?.chartData || {};
     const dataElipse = station.elipse?.historyChartData || {};
 
@@ -666,36 +665,31 @@ export function renderComparisonCharts(station) {
     let filterIndicesZeus = null;
     let filterIndicesElipse = null;
 
-    // A lógica de filtro de datas
     if (startDate && endDate) {
-        // Clona a data final e ajusta para o fim do dia (23:59:59.999)
         const startTimestamp = startDate.getTime();
         let endOfDay = new Date(endDate.getTime());
         endOfDay.setHours(23, 59, 59, 999);
         const endTimestamp = endOfDay.getTime();
 
-        // Filtra índices para Zeus
         if (hasZeusData) {
             filterIndicesZeus = labelsZeus.map((label, index) => {
-                try {
-                    const labelTimestamp = new Date(label).getTime();
-                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
-                } catch { return -1; }
+                const labelTimestamp = new Date(label).getTime();
+                return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
             }).filter(index => index !== -1);
         }
-        // Filtra índices para Elipse
         if (hasElipseData) {
             filterIndicesElipse = labelsElipse.map((label, index) => {
-                try {
-                    const labelTimestamp = new Date(label).getTime();
-                    return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
-                } catch { return -1; }
+                const labelTimestamp = new Date(label).getTime();
+                return (labelTimestamp >= startTimestamp && labelTimestamp <= endTimestamp) ? index : -1;
             }).filter(index => index !== -1);
         }
     }
 
+    // --- NOVA FORMA DE LER OS DADOS ---
+    const selectedZeusKeys = Array.from(containerZeus.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    const selectedElipseKeys = Array.from(containerElipse.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
     const ctxZeus = canvasZeus.getContext('2d');
-    const selectedZeusKeys = Array.from(selectZeus.selectedOptions).map(opt => opt.value);
 
     // --- GRÁFICO ZEUS ---
     if (hasZeusData && selectedZeusKeys.length > 0) {
@@ -705,14 +699,11 @@ export function renderComparisonCharts(station) {
         let datasetsZeus = selectedZeusKeys.map(key => {
             const option = variableOptions[key];
             let data = (dataZeus[option.dataKey] || []);
-
-            // Aplica o filtro aos dados
             if (filterIndicesZeus && data.length === labelsZeus.length) {
                 data = filterIndicesZeus.map(i => data[i]);
             } else if (filterIndicesZeus) {
                 data = [];
             }
-
             return {
                 label: key.replace('Zeus ', ''),
                 data: data,
@@ -722,7 +713,7 @@ export function renderComparisonCharts(station) {
                 borderWidth: 2,
                 pointRadius: 2,
                 borderDash: option.borderDash || [],
-                fill: option.dataKey === 'vazao', // Preenche área se for Vazão
+                fill: option.dataKey === 'vazao',
             };
         });
         
@@ -743,7 +734,6 @@ export function renderComparisonCharts(station) {
                             time: { unit: 'minute', tooltipFormat: 'dd/MM/yyyy HH:mm', displayFormats: { minute: 'HH:mm', hour: 'dd/MM HH:00', day: 'dd/MM/yy' } },
                             title: { display: true, text: 'Data / Hora' }
                         },
-                        // Define quais eixos Y mostrar dinamicamente
                         yVazao: { type: 'linear', display: activeZeusYAxes.has('yVazao'), position: 'left', title: { display: true, text: 'Vazão (L/s)' } },
                         yPressao: { type: 'linear', display: activeZeusYAxes.has('yPressao'), position: 'left', offset: activeZeusYAxes.has('yVazao'), title: { display: true, text: 'Pressão (mca)' } }
                     }
@@ -764,7 +754,6 @@ export function renderComparisonCharts(station) {
 
     // --- GRÁFICO ELIPSE ---
     const ctxElipse = canvasElipse.getContext('2d');
-    const selectedElipseKeys = Array.from(selectElipse.selectedOptions).map(opt => opt.value);
 
     if (hasElipseData && selectedElipseKeys.length > 0) {
         const activeElipseYAxes = new Set(selectedElipseKeys.map(key => variableOptions[key].yAxisID));
@@ -773,14 +762,11 @@ export function renderComparisonCharts(station) {
         let datasetsElipse = selectedElipseKeys.map(key => {
             const option = variableOptions[key];
             let data = (dataElipse[option.dataKey] || []);
-
-            // Aplica o filtro aos dados
             if (filterIndicesElipse && data.length === labelsElipse.length) {
                 data = filterIndicesElipse.map(i => data[i]);
             } else if (filterIndicesElipse) {
                 data = [];
             }
-
             return {
                 label: key.replace('Elipse ', ''),
                 data: data,
@@ -790,8 +776,6 @@ export function renderComparisonCharts(station) {
                 borderWidth: 2,
                 pointRadius: 2,
                 borderDash: option.borderDash || [],
-                // Para o eixo de Categoria (Status), o tipo de gráfico deve ser 'bar', mas mantemos 'line' e ajustamos o yAxis
-                // O ponto final dos dados que são "status" deve ser zero, mas isso é uma complexidade desnecessária por agora
             };
         });
 
@@ -809,7 +793,6 @@ export function renderComparisonCharts(station) {
                             time: { unit: 'second', tooltipFormat: 'dd/MM/yyyy HH:mm:ss', displayFormats: { second: 'HH:mm:ss', minute: 'HH:mm', hour: 'dd/MM HH:00' } },
                             title: { display: true, text: 'Data / Hora' }
                         },
-                        // Define todos os eixos Y possíveis, e mostra apenas os ativos
                         yPressao: { type: 'linear', display: activeElipseYAxes.has('yPressao'), position: 'left', title: { display: true, text: 'Pressão (mca)' } },
                         yNivel: { type: 'linear', display: activeElipseYAxes.has('yNivel'), position: 'right', title: { display: true, text: 'Nível (m)' }, grid: { drawOnChartArea: false } },
                         yCorrente: { type: 'linear', display: activeElipseYAxes.has('yCorrente'), position: 'right', offset: activeElipseYAxes.has('yNivel'), title: { display: true, text: 'Corrente (A)' }, grid: { drawOnChartArea: false } },
@@ -818,7 +801,6 @@ export function renderComparisonCharts(station) {
                             labels: ['Local', 'Remoto', 'Falha', 'OK', 0, 1],
                             display: activeElipseYAxes.has('yStatus'),
                             position: 'right',
-                            // Garante que o offset funcione corretamente para evitar sobreposição
                             offset: activeElipseYAxes.has('yNivel') || activeElipseYAxes.has('yCorrente'),
                             title: { display: true, text: 'Status' },
                             grid: { drawOnChartArea: false }
