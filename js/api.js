@@ -133,6 +133,23 @@ function aggregateElipseData(elipseRows) {
 }
 
 
+// Função que busca dados da porcentagem entregue
+async function fetchFaturamentoForMonth(mesAno) {
+    const url = `${API_BASE_URL}/data/faturamento-status?mes_ano=${mesAno}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error("Erro ao buscar faturamento:", response.status, response.statusText);
+            return [];
+        }
+        const data = await response.json();
+        return data; // Retorna o array de faturamento para todas as estações
+    } catch (error) {
+        console.error("Erro de rede ao buscar faturamento:", error);
+        return [];
+    }
+}
+
 
 /**
  * Função ESSENCIAL para transformar a resposta do DB na estrutura da UI (Array de Estações).
