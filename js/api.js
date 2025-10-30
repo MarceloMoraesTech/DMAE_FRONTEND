@@ -249,6 +249,83 @@ async function fetchFaturamentoForMonth(mesAno) {
  * @param {Array<Object>} faturamentoData - Dados do endpoint /data/faturamento-status
  * @returns {Array<Object>} O Array de estações no formato esperado pela UI.
  */
+// function normalizeRawDataToStations(rawData, faturamentoData = []) {
+//     const { planilha_zeus, planilha_elipse } = rawData;
+    
+//     // 1. Agregação dos KPIs
+//     const zeusAggregated = aggregateZeusData(planilha_zeus);
+//     const elipseAggregated = aggregateElipseData(planilha_elipse);
+    
+//     // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
+//     const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
+//     const realStationId = 9999; 
+
+//     // Busca o dado de faturamento para esta estação específica
+//     const faturamentoItem = faturamentoData.find(item => {
+//         // Para 'BORDINI 400' (na API)
+//     const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
+//     // Para 'Bordini' (da telemetria)
+//     const realNameUpper = realStationName.toUpperCase().trim();
+
+//     return faturamentoNameUpper.includes(realNameUpper) || faturamentoNameUpper === realNameUpper;
+
+//     });
+    
+//     let percentualComms = 0; 
+    
+//     if (faturamentoItem && faturamentoItem.PercentualComms) {
+//         // Pega a string '31.56%', remove o '%' e converte para número (31.56)
+//         percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''))|| 0;
+//     }
+    
+
+//     // 3. Criação da Estação Mestra (Agregada)
+//     const realStation = {
+//         id: realStationId, 
+//         name: realStationName, 
+//         lat: -30.03, lon: -51.20, // Mock Lat/Lon
+//         comm_percent: percentualComms,
+//         faturamento: faturamentoItem,
+        
+//         // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
+//         vazao_ult: zeusAggregated.vazao_ult, 
+//         vazao_med: zeusAggregated.vazao_med,
+//         vazao_max: zeusAggregated.vazao_ult * 1.5, // Mock do Max
+        
+//         leitura: new Date().toLocaleTimeString(),
+//         eficiencia_energetica: 0.75, 
+//         tempo_operacao_24h: 18.0,
+//         vazao_pico_24h: zeusAggregated.vazao_ult * 1.6,
+        
+//         // Estrutura ZEUS
+//         zeus: { 
+//             isReal: zeusAggregated.isReal, 
+//             limites: { pressao_max: 95 }, 
+//             // Mock de chartData, será atualizado por getHistoricalData
+//             chartData: { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] } 
+//         }, 
+        
+//         // Estrutura ELIPSE (Combinando dados agregados)
+//         elipse: { 
+//             ...elipseAggregated, // Propriedades do Elipse (modo_controle, nível, etc.)
+            
+//             // Sobrescrevendo a pressão com os dados do Zeus (mais confiáveis para recalque)
+//             pressao_suc: zeusAggregated.pressao_succao_ult, 
+//             pressao_rec: zeusAggregated.pressao_recal_ult, 
+
+//             // Mantendo os mocks de ChartData para evitar quebrar a UI
+//             chartData: { labels: [], gmb1: [], gmb2: [], gmb3: [] }, 
+//             historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb2: [], corrente_gmb3: [] } 
+//         }, 
+        
+//         // Estrutura SIGES
+//         siges: { ativos: [{ pos: "GERAL", desc: "ATIVO GENÉRICO", spec: "REAL" }] }
+//     };
+
+//     // CORREÇÃO: Usando a variável 'backend' importada diretamente
+//     return [realStation];
+// }
+
 function normalizeRawDataToStations(rawData, faturamentoData = []) {
     const { planilha_zeus, planilha_elipse } = rawData;
     
@@ -256,41 +333,40 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
     const zeusAggregated = aggregateZeusData(planilha_zeus);
     const elipseAggregated = aggregateElipseData(planilha_elipse);
     
-    // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
-    const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
+    // 2. Determinação do Nome da Estação 
+    const realStationName = elipseAggregated.nome_estacao || "Estação Agregada";
     const realStationId = 9999; 
 
     // Busca o dado de faturamento para esta estação específica
     const faturamentoItem = faturamentoData.find(item => {
-        // Para 'BORDINI 400' (na API)
-    const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
-    // Para 'Bordini' (da telemetria)
-    const realNameUpper = realStationName.toUpperCase().trim();
-
-    return faturamentoNameUpper.includes(realNameUpper) || faturamentoNameUpper === realNameUpper;
-
+        const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
+        const realNameUpper = realStationName.toUpperCase().trim();
+        
+        return faturamentoNameUpper.includes(realNameUpper) || 
+               realNameUpper.includes(faturamentoNameUpper) ||
+               faturamentoNameUpper === realNameUpper;
     });
     
     let percentualComms = 0; 
     
     if (faturamentoItem && faturamentoItem.PercentualComms) {
-        // Pega a string '31.56%', remove o '%' e converte para número (31.56)
-        percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''))|| 0;
+        // Remove o '%' e substitui vírgula por ponto
+        const percentStr = faturamentoItem.PercentualComms.replace('%', '').replace(',', '.');
+        percentualComms = parseFloat(percentStr) || 0;
     }
-    
 
     // 3. Criação da Estação Mestra (Agregada)
     const realStation = {
         id: realStationId, 
         name: realStationName, 
-        lat: -30.03, lon: -51.20, // Mock Lat/Lon
+        lat: -30.03, lon: -51.20,
         comm_percent: percentualComms,
         faturamento: faturamentoItem,
         
-        // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
+        // KPIs Principais - Priorizar Zeus para vazão, Elipse para pressões
         vazao_ult: zeusAggregated.vazao_ult, 
         vazao_med: zeusAggregated.vazao_med,
-        vazao_max: zeusAggregated.vazao_ult * 1.5, // Mock do Max
+        vazao_max: zeusAggregated.vazao_ult * 1.5,
         
         leitura: new Date().toLocaleTimeString(),
         eficiencia_energetica: 0.75, 
@@ -301,30 +377,23 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
         zeus: { 
             isReal: zeusAggregated.isReal, 
             limites: { pressao_max: 95 }, 
-            // Mock de chartData, será atualizado por getHistoricalData
             chartData: { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] } 
         }, 
         
-        // Estrutura ELIPSE (Combinando dados agregados)
+        // Estrutura ELIPSE - Usar dados reais da nova estrutura
         elipse: { 
-            ...elipseAggregated, // Propriedades do Elipse (modo_controle, nível, etc.)
-            
-            // Sobrescrevendo a pressão com os dados do Zeus (mais confiáveis para recalque)
-            pressao_suc: zeusAggregated.pressao_succao_ult, 
-            pressao_rec: zeusAggregated.pressao_recal_ult, 
-
-            // Mantendo os mocks de ChartData para evitar quebrar a UI
+            ...elipseAggregated,
+            // Manter as pressões reais da Elipse
             chartData: { labels: [], gmb1: [], gmb2: [], gmb3: [] }, 
-            historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb2: [], corrente_gmb3: [] } 
+            historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb1: [], corrente_gmb2: [], corrente_gmb3: [], modo_controle: [], falha_comunicacao: [] } 
         }, 
         
-        // Estrutura SIGES
         siges: { ativos: [{ pos: "GERAL", desc: "ATIVO GENÉRICO", spec: "REAL" }] }
     };
 
-    // CORREÇÃO: Usando a variável 'backend' importada diretamente
     return [realStation];
 }
+
 
 /**
  * Funçao de Transformação de Dados Históricos
