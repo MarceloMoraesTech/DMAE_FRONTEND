@@ -122,7 +122,7 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
     
     if (faturamentoItem && faturamentoItem.PercentualComms) {
         // Pega a string '31.56%', remove o '%' e converte para número (31.56)
-        percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''));
+        percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''))|| 0;
     }
     
 
