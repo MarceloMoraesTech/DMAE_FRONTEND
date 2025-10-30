@@ -31,217 +31,108 @@ function aggregateZeusData(zeusRows) {
     };
 }
 
-// function aggregateElipseData(elipseRows) {
-//    if (elipseRows.length === 0) {
-//         return { isReal: false };
-//     }
-    
-//     // 1. Converte o array de pares chave-valor em um objeto de métricas
-//     // Agrupa todos os pares chave-valor em um único objeto 'metrics'
-//     const metrics = {};
-//     let stationName = 'Estação Elipse (Nome Indefinido)';
-    
-//     // Iteramos sobre todas as linhas recebidas para construir o objeto 'metrics'
-//     elipseRows.forEach(row => {
-//         // Assume que o nome da estação é consistente em todas as linhas
-//         if (row.nome_estacao) {
-//             stationName = row.nome_estacao;
-//         }
-        
-//         if (row.nome_variavel) {
-//             const nomeVariavel = row.nome_variavel.trim();
-//             const valor = row.valor; // Pode ser um número (string) ou [null]
-//             const variavelLocal = row.variavel_local ? row.variavel_local.trim().toUpperCase() : '';
-
-//             // Mapeamento dos campos:
-//             switch (nomeVariavel) {
-//                 case 'ModoControle':
-//                     metrics.modo_controle = parseFloat(valor) || 0;
-//                     break;
-//                 case 'FalhaComunicacao':
-//                     // Verifica se a falha é para a estação principal ('Propria Estação')
-//                     if (variavelLocal.includes('PROPRIA ESTAÇÃO') || variavelLocal === stationName.toUpperCase()) {
-//                          metrics.falha_comunicacao_ativa = true; // Valor é null, a presença indica a falha
-//                     }
-//                     break;
-//                 case 'PressaoSuccao':
-//                     metrics.pressao_succao = parseFloat(valor) || 0;
-//                     break;
-//                 case 'PressaoRecalque':
-//                     // Adicionando o novo campo PressaoRecalque
-//                     metrics.pressao_recalque = parseFloat(valor) || 0; 
-//                     break;
-//                 case 'Nivel':
-//                     // Assumimos que 'Nivel' com 'RSV Inferior 01' é o 'nivel_rvz' (inferior)
-//                     if (variavelLocal.includes('RSV INFERIOR')) {
-//                         metrics.nivel_rvz = parseFloat(valor) || 0;
-//                     } 
-//                     // Assumimos que 'Nivel' com 'Reservatório' é o nível superior
-//                     else if (variavelLocal.includes('RESERVATÓRIO')) {
-//                         metrics.nivel_superior = parseFloat(valor) || 0;
-//                     }
-//                     break;
-//                 case 'Corrente':
-//                     // Mapeamento das correntes das bombas
-//                     if (variavelLocal.includes('GMB 01')) {
-//                         metrics.corrente_b1 = parseFloat(valor) || 0;
-//                     } else if (variavelLocal.includes('GMB 02')) {
-//                         metrics.corrente_b2 = parseFloat(valor) || 0;
-//                     } else if (variavelLocal.includes('GMB 03')) {
-//                         metrics.corrente_b3 = parseFloat(valor) || 0;
-//                     }
-//                     break;
-//             }
-//         }
-//     });
-
-//     // --- 2. Criação do Objeto de Estação ---
-
-//     const modoControleCode = metrics.modo_controle || 0;
-//     const modoControleStr = modoControleCode === 2 ? "Remoto Automático" : (modoControleCode === 1 ? "Local" : "N/D");
-    
-//     // Os valores extraídos do objeto 'metrics' (garantindo que não sejam undefined)
-//     const pressao_suc = metrics.pressao_succao || 0;
-//     const nivel_superior = metrics.nivel_superior || 0;
-//     const nivel_rvz = metrics.nivel_rvz || 0;
-//     // O status da bomba b1 é determinado pela sua corrente (o mais robusto)
-//     const corrente_b1 = metrics.corrente_b1 || 0; 
-
-//     return {
-//         isReal: true,
-//         nome_estacao: stationName,
-//         pressao_suc: parseFloat(pressao_suc.toFixed(2)),
-        
-//         // Mapeamento para os campos da UI
-//         modo_controle: modoControleStr, 
-//         nivel_rsv_inferior: parseFloat(nivel_rvz.toFixed(2)), // nível RSV Inferior
-//         nivel_rsv_superior_nome: "Reservatório", // Nome baseado na lógica do banco
-//         nivel_rsv_superior_valor: nivel_superior, // nível superior
-//         alarme_ativo: metrics.falha_comunicacao_ativa ? "Falha de Comunicação" : "OK",
-        
-//         // Mocks e Lógica de Bombas (usando correntes mapeadas)
-//         bombas: { b1: corrente_b1 > 0, b2: (metrics.corrente_b2 || 0) > 0, b3: (metrics.corrente_b3 || 0) > 0 }, 
-//         horimetro_b1: 1000, partidas_b1_24h: 5, 
-//         horimetro_b2: 1000, partidas_b2_24h: 5, 
-//         horimetro_b3: 1000, partidas_b3_24h: 5, 
-//         limites: { pressao_rec_max: 95, nivel_sup_min: 1.0 }, 
-//         station_alerts: [],
-        
-//         // Incluir pressão de recalque do Elipse
-//         pressao_rec: metrics.pressao_recalque || 0, // Novo! Usaremos ela na próxima correção.
-//     };
-// }
-
 function aggregateElipseData(elipseRows) {
-    if (elipseRows.length === 0) {
+   if (elipseRows.length === 0) {
         return { isReal: false };
     }
-
-    console.log("DEBUG - Estrutura Elipse recebida:", elipseRows);
-
-    // Agrupar as métricas por timestamp
-    const metricsByTime = {};
+    
+    // 1. Converte o array de pares chave-valor em um objeto de métricas
+    // Agrupa todos os pares chave-valor em um único objeto 'metrics'
+    const metrics = {};
+    let stationName = 'Estação Elipse (Nome Indefinido)';
+    
+    // Iteramos sobre todas as linhas recebidas para construir o objeto 'metrics'
     elipseRows.forEach(row => {
-        const timeKey = row.data_hora;
-        if (!metricsByTime[timeKey]) {
-            metricsByTime[timeKey] = {
-                nome_estacao: row.nome_estacao,
-                data_hora: row.data_hora,
-                metrics: {}
-            };
+        // Assume que o nome da estação é consistente em todas as linhas
+        if (row.nome_estacao) {
+            stationName = row.nome_estacao;
         }
-        // Armazenar cada métrica pelo nome da variável
-        metricsByTime[timeKey].metrics[row.name_variavel] = {
-            valor: row.valor,
-            variavel_local: row.variavel_local,
-            unidade: row.unidade
-        };
-    });
+        
+        if (row.nome_variavel) {
+            const nomeVariavel = row.nome_variavel.trim();
+            const valor = row.valor; // Pode ser um número (string) ou [null]
+            const variavelLocal = row.variavel_local ? row.variavel_local.trim().toUpperCase() : '';
 
-    // Pegar o timestamp mais recente
-    const timestamps = Object.keys(metricsByTime).sort();
-    const latestTimestamp = timestamps[timestamps.length - 1];
-    const latestData = metricsByTime[latestTimestamp];
-    const metrics = latestData.metrics;
-
-    console.log("DEBUG - Métricas agrupadas:", metrics);
-
-    // Extrair valores das métricas específicas
-    const modoControleCode = parseFloat(metrics['ModoControle']?.valor) || 2; // Default para Remoto Automático
-    const modoControleStr = modoControleCode === 2 ? "Remoto Automático" : (modoControleCode === 1 ? "Local" : "N/D");
-
-    const pressao_suc = parseFloat(metrics['PressaoSuccao']?.valor) || 0;
-    const pressao_rec = parseFloat(metrics['PressaoRecalque']?.valor) || 0;
-    
-    // Nível do reservatório inferior
-    const nivel_rsv_inferior = parseFloat(metrics['Nivel']?.valor) || 0; // Da RSV Inferior 01
-    
-    // Correntes das bombas
-    const corrente_b1 = parseFloat(metrics['Corrente']?.valor) || 0; // Da GMB 01
-    // Nota: Para GMB 02 e 03, precisamos de lógica adicional pois têm o mesmo name_variavel
-
-    // Buscar correntes específicas por variavel_local
-    let correnteGMB1 = 0, correnteGMB2 = 0, correnteGMB3 = 0;
-    elipseRows.forEach(row => {
-        if (row.data_hora === latestTimestamp) {
-            if (row.variavel_local === 'GMB 01' && row.name_variavel === 'Corrente') {
-                correnteGMB1 = parseFloat(row.valor) || 0;
-            } else if (row.variavel_local === 'GMB 02' && row.name_variavel === 'Corrente') {
-                correnteGMB2 = parseFloat(row.valor) || 0;
-            } else if (row.variavel_local === 'GMB 03' && row.name_variavel === 'Corrente') {
-                correnteGMB3 = parseFloat(row.valor) || 0;
+            // Mapeamento dos campos:
+            switch (nomeVariavel) {
+                case 'ModoControle':
+                    metrics.modo_controle = parseFloat(valor) || 0;
+                    break;
+                case 'FalhaComunicacao':
+                    // Verifica se a falha é para a estação principal ('Propria Estação')
+                    if (variavelLocal.includes('PROPRIA ESTAÇÃO') || variavelLocal === stationName.toUpperCase()) {
+                         metrics.falha_comunicacao_ativa = true; // Valor é null, a presença indica a falha
+                    }
+                    break;
+                case 'PressaoSuccao':
+                    metrics.pressao_succao = parseFloat(valor) || 0;
+                    break;
+                case 'PressaoRecalque':
+                    // Adicionando o novo campo PressaoRecalque
+                    metrics.pressao_recalque = parseFloat(valor) || 0; 
+                    break;
+                case 'Nivel':
+                    // Assumimos que 'Nivel' com 'RSV Inferior 01' é o 'nivel_rvz' (inferior)
+                    if (variavelLocal.includes('RSV INFERIOR')) {
+                        metrics.nivel_rvz = parseFloat(valor) || 0;
+                    } 
+                    // Assumimos que 'Nivel' com 'Reservatório' é o nível superior
+                    else if (variavelLocal.includes('RESERVATÓRIO')) {
+                        metrics.nivel_superior = parseFloat(valor) || 0;
+                    }
+                    break;
+                case 'Corrente':
+                    // Mapeamento das correntes das bombas
+                    if (variavelLocal.includes('GMB 01')) {
+                        metrics.corrente_b1 = parseFloat(valor) || 0;
+                    } else if (variavelLocal.includes('GMB 02')) {
+                        metrics.corrente_b2 = parseFloat(valor) || 0;
+                    } else if (variavelLocal.includes('GMB 03')) {
+                        metrics.corrente_b3 = parseFloat(valor) || 0;
+                    }
+                    break;
             }
         }
     });
 
-    // Verificar falha de comunicação
-    const falhaComunicacao = metrics['FalhaComunicacao']?.valor !== null && 
-                            metrics['FalhaComunicacao']?.valor !== undefined;
+    // --- 2. Criação do Objeto de Estação ---
+
+    const modoControleCode = metrics.modo_controle || 0;
+    const modoControleStr = modoControleCode === 2 ? "Remoto Automático" : (modoControleCode === 1 ? "Local" : "N/D");
+    
+    // Os valores extraídos do objeto 'metrics' (garantindo que não sejam undefined)
+    const pressao_suc = metrics.pressao_succao || 0;
+    const nivel_superior = metrics.nivel_superior || 0;
+    const nivel_rvz = metrics.nivel_rvz || 0;
+    // O status da bomba b1 é determinado pela sua corrente (o mais robusto)
+    const corrente_b1 = metrics.corrente_b1 || 0; 
 
     return {
         isReal: true,
-        nome_estacao: latestData.nome_estacao,
+        nome_estacao: stationName,
         pressao_suc: parseFloat(pressao_suc.toFixed(2)),
-        pressao_rec: parseFloat(pressao_rec.toFixed(2)),
+        
+        // Mapeamento para os campos da UI
         modo_controle: modoControleStr, 
-        nivel_rsv_inferior: parseFloat(nivel_rsv_inferior.toFixed(2)), 
-        nivel_rsv_superior_nome: "RVZ", 
-        nivel_rsv_superior_valor: 2.5, // Mock por enquanto
-        alarme_ativo: falhaComunicacao ? "Falha de Comunicação" : "OK",
+        nivel_rsv_inferior: parseFloat(nivel_rvz.toFixed(2)), // nível RSV Inferior
+        nivel_rsv_superior_nome: "Reservatório", // Nome baseado na lógica do banco
+        nivel_rsv_superior_valor: nivel_superior, // nível superior
+        alarme_ativo: metrics.falha_comunicacao_ativa ? "Falha de Comunicação" : "OK",
         
-        // Bombas baseadas nas correntes reais
-        bombas: { 
-            b1: correnteGMB1 > 0.5, 
-            b2: correnteGMB2 > 0.5, 
-            b3: correnteGMB3 > 0.5 
-        },
-        
-        // Mock de horímetros e partidas (não temos esses dados ainda)
+        // Mocks e Lógica de Bombas (usando correntes mapeadas)
+        bombas: { b1: corrente_b1 > 0, b2: (metrics.corrente_b2 || 0) > 0, b3: (metrics.corrente_b3 || 0) > 0 }, 
         horimetro_b1: 1000, partidas_b1_24h: 5, 
         horimetro_b2: 1000, partidas_b2_24h: 5, 
         horimetro_b3: 1000, partidas_b3_24h: 5, 
         limites: { pressao_rec_max: 95, nivel_sup_min: 1.0 }, 
         station_alerts: [],
+        
+        // Incluir pressão de recalque do Elipse
+        pressao_rec: metrics.pressao_recalque || 0, // Novo! Usaremos ela na próxima correção.
     };
 }
 
 
-// Função que busca dados da porcentagem entregue
-async function fetchFaturamentoForMonth(mesAno) {
-    const url = `${API_BASE_URL}/data/faturamento-status?mes_ano=${mesAno}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error("Erro ao buscar faturamento:", response.status, response.statusText);
-            return [];
-        }
-        const data = await response.json();
-        return data; // Retorna o array de faturamento para todas as estações
-    } catch (error) {
-        console.error("Erro de rede ao buscar faturamento:", error);
-        return [];
-    }
-}
 
 /**
  * Função ESSENCIAL para transformar a resposta do DB na estrutura da UI (Array de Estações).
@@ -249,83 +140,6 @@ async function fetchFaturamentoForMonth(mesAno) {
  * @param {Array<Object>} faturamentoData - Dados do endpoint /data/faturamento-status
  * @returns {Array<Object>} O Array de estações no formato esperado pela UI.
  */
-// function normalizeRawDataToStations(rawData, faturamentoData = []) {
-//     const { planilha_zeus, planilha_elipse } = rawData;
-    
-//     // 1. Agregação dos KPIs
-//     const zeusAggregated = aggregateZeusData(planilha_zeus);
-//     const elipseAggregated = aggregateElipseData(planilha_elipse);
-    
-//     // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
-//     const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
-//     const realStationId = 9999; 
-
-//     // Busca o dado de faturamento para esta estação específica
-//     const faturamentoItem = faturamentoData.find(item => {
-//         // Para 'BORDINI 400' (na API)
-//     const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
-//     // Para 'Bordini' (da telemetria)
-//     const realNameUpper = realStationName.toUpperCase().trim();
-
-//     return faturamentoNameUpper.includes(realNameUpper) || faturamentoNameUpper === realNameUpper;
-
-//     });
-    
-//     let percentualComms = 0; 
-    
-//     if (faturamentoItem && faturamentoItem.PercentualComms) {
-//         // Pega a string '31.56%', remove o '%' e converte para número (31.56)
-//         percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''))|| 0;
-//     }
-    
-
-//     // 3. Criação da Estação Mestra (Agregada)
-//     const realStation = {
-//         id: realStationId, 
-//         name: realStationName, 
-//         lat: -30.03, lon: -51.20, // Mock Lat/Lon
-//         comm_percent: percentualComms,
-//         faturamento: faturamentoItem,
-        
-//         // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
-//         vazao_ult: zeusAggregated.vazao_ult, 
-//         vazao_med: zeusAggregated.vazao_med,
-//         vazao_max: zeusAggregated.vazao_ult * 1.5, // Mock do Max
-        
-//         leitura: new Date().toLocaleTimeString(),
-//         eficiencia_energetica: 0.75, 
-//         tempo_operacao_24h: 18.0,
-//         vazao_pico_24h: zeusAggregated.vazao_ult * 1.6,
-        
-//         // Estrutura ZEUS
-//         zeus: { 
-//             isReal: zeusAggregated.isReal, 
-//             limites: { pressao_max: 95 }, 
-//             // Mock de chartData, será atualizado por getHistoricalData
-//             chartData: { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] } 
-//         }, 
-        
-//         // Estrutura ELIPSE (Combinando dados agregados)
-//         elipse: { 
-//             ...elipseAggregated, // Propriedades do Elipse (modo_controle, nível, etc.)
-            
-//             // Sobrescrevendo a pressão com os dados do Zeus (mais confiáveis para recalque)
-//             pressao_suc: zeusAggregated.pressao_succao_ult, 
-//             pressao_rec: zeusAggregated.pressao_recal_ult, 
-
-//             // Mantendo os mocks de ChartData para evitar quebrar a UI
-//             chartData: { labels: [], gmb1: [], gmb2: [], gmb3: [] }, 
-//             historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb2: [], corrente_gmb3: [] } 
-//         }, 
-        
-//         // Estrutura SIGES
-//         siges: { ativos: [{ pos: "GERAL", desc: "ATIVO GENÉRICO", spec: "REAL" }] }
-//     };
-
-//     // CORREÇÃO: Usando a variável 'backend' importada diretamente
-//     return [realStation];
-// }
-
 function normalizeRawDataToStations(rawData, faturamentoData = []) {
     const { planilha_zeus, planilha_elipse } = rawData;
     
@@ -333,40 +147,41 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
     const zeusAggregated = aggregateZeusData(planilha_zeus);
     const elipseAggregated = aggregateElipseData(planilha_elipse);
     
-    // 2. Determinação do Nome da Estação 
-    const realStationName = elipseAggregated.nome_estacao || "Estação Agregada";
+    // 2. Determinação do Nome da Estação Mestra (Usamos o nome do Elipse se disponível)
+    const realStationName = elipseAggregated.nome_estacao || "Estação Agregada (Zeus)";
     const realStationId = 9999; 
 
     // Busca o dado de faturamento para esta estação específica
     const faturamentoItem = faturamentoData.find(item => {
-        const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
-        const realNameUpper = realStationName.toUpperCase().trim();
-        
-        return faturamentoNameUpper.includes(realNameUpper) || 
-               realNameUpper.includes(faturamentoNameUpper) ||
-               faturamentoNameUpper === realNameUpper;
+        // Para 'BORDINI 400' (na API)
+    const faturamentoNameUpper = item.Estacao.toUpperCase().trim();
+    // Para 'Bordini' (da telemetria)
+    const realNameUpper = realStationName.toUpperCase().trim();
+
+    return faturamentoNameUpper.includes(realNameUpper) || faturamentoNameUpper === realNameUpper;
+
     });
     
     let percentualComms = 0; 
     
     if (faturamentoItem && faturamentoItem.PercentualComms) {
-        // Remove o '%' e substitui vírgula por ponto
-        const percentStr = faturamentoItem.PercentualComms.replace('%', '').replace(',', '.');
-        percentualComms = parseFloat(percentStr) || 0;
+        // Pega a string '31.56%', remove o '%' e converte para número (31.56)
+        percentualComms = parseFloat(faturamentoItem.PercentualComms.replace('%', ''))|| 0;
     }
+    
 
     // 3. Criação da Estação Mestra (Agregada)
     const realStation = {
         id: realStationId, 
         name: realStationName, 
-        lat: -30.03, lon: -51.20,
+        lat: -30.03, lon: -51.20, // Mock Lat/Lon
         comm_percent: percentualComms,
         faturamento: faturamentoItem,
         
-        // KPIs Principais - Priorizar Zeus para vazão, Elipse para pressões
+        // KPIs Principais (Zeus é a fonte para Vazão e Pressão)
         vazao_ult: zeusAggregated.vazao_ult, 
         vazao_med: zeusAggregated.vazao_med,
-        vazao_max: zeusAggregated.vazao_ult * 1.5,
+        vazao_max: zeusAggregated.vazao_ult * 1.5, // Mock do Max
         
         leitura: new Date().toLocaleTimeString(),
         eficiencia_energetica: 0.75, 
@@ -377,22 +192,31 @@ function normalizeRawDataToStations(rawData, faturamentoData = []) {
         zeus: { 
             isReal: zeusAggregated.isReal, 
             limites: { pressao_max: 95 }, 
+            // Mock de chartData, será atualizado por getHistoricalData
             chartData: { labels: [], vazao: [], pressao_rec: [], pressao_suc: [] } 
         }, 
         
-        // Estrutura ELIPSE - Usar dados reais da nova estrutura
+        // Estrutura ELIPSE (Combinando dados agregados)
         elipse: { 
-            ...elipseAggregated,
-            // Manter as pressões reais da Elipse
+            ...elipseAggregated, // Propriedades do Elipse (modo_controle, nível, etc.)
+            
+            // Sobrescrevendo a pressão com os dados do Zeus (mais confiáveis para recalque)
+            pressao_suc: zeusAggregated.pressao_succao_ult, 
+            pressao_rec: zeusAggregated.pressao_recal_ult, 
+
+            // Mantendo os mocks de ChartData para evitar quebrar a UI
             chartData: { labels: [], gmb1: [], gmb2: [], gmb3: [] }, 
-            historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb1: [], corrente_gmb2: [], corrente_gmb3: [], modo_controle: [], falha_comunicacao: [] } 
+            historyChartData: { labels: [], pressao_suc: [], pressao_rec: [], nivel_rsv_superior: [], corrente_gmb2: [], corrente_gmb3: [] } 
         }, 
         
+        // Estrutura SIGES
         siges: { ativos: [{ pos: "GERAL", desc: "ATIVO GENÉRICO", spec: "REAL" }] }
     };
 
+    // CORREÇÃO: Usando a variável 'backend' importada diretamente
     return [realStation];
 }
+
 
 
 /**
