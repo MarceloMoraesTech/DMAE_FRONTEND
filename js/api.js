@@ -33,37 +33,59 @@ function aggregateZeusData(zeusRows) {
 
 // NOVO: Refinando a função aggregateElipseData
 function aggregateElipseData(elipseRows) {
-    if (elipseRows.length === 0) {
+   if (elipseRows.length === 0) {
         return { isReal: false };
     }
     
-    // Assume-se que o primeiro registro é o mais recente
+    // 1. Converte o array de pares chave-valor em um objeto de métricas
+    const metrics = {};
     const latestRow = elipseRows[0]; 
+    const stationName = latestRow.nome_estacao;
+    
+    // Mapeamento Chave-Valor para o objeto 'metrics'
+    elipseRows.forEach(row => {
+        // Usa o nome da variável (em camelCase ou padronizado) como chave
+        // e o valor (convertido para float) como valor
+        if (row.nome_variavel) {
+            // Tratamento especial para o 'FalhaComunicao' que tem valor NULL
+            if (row.nome_variavel === "FalhaComunicao") {
+                metrics.falha_comunicacao_ativa = true;
+            } else if (row.valor !== null) {
+                 // Usa apenas os 3 primeiros para simular o 'nivel_rvz' e 'nivel'
+                 // Você precisará refinar esse mapeamento com base na nova API.
+                 const chavePadronizada = row.nome_variavel.toLowerCase().trim();
 
-    // O modo_controle parece ser um código (2.0000). 
-    // Mapeamos para a string esperada ("Remoto Automático")
-    const modoControleCode = parseFloat(latestRow.modo_controle);
+                 if (chavePadronizada.includes('nivel') || chavePadronizada.includes('pressao') || chavePadronizada.includes('corrente') || chavePadronizada.includes('modo')) {
+                    // Aqui você mapearia os nomes do banco (ex: 'Nivel_Reserva_Superior') para 
+                    // os nomes internos do seu código (ex: 'nivel_rsv_superior_valor')
+                    metrics[chavePadronizada] = parseFloat(row.valor) || 0;
+                 }
+            }
+        }
+    });
+
+    // Assume que 'modo_controle' está em 'metrics' agora
+    const modoControleCode = metrics.modo_controle || 0; 
     const modoControleStr = modoControleCode === 2 ? "Remoto Automático" : (modoControleCode === 1 ? "Local" : "N/D");
     
-    // Extrai valores, convertendo para float e tratando NULL
-    const pressao_suc = parseFloat(latestRow.pressao_succao) || 0;
-    const nivel = parseFloat(latestRow.nivel) || 0;
-    const nivel_rvz = parseFloat(latestRow.nivel_rvz) || 0;
-    const corrente = parseFloat(latestRow.corrente) || 0;
+    // Extrai valores (usando os nomes do banco)
+    const pressao_suc = metrics.pressao_succao || 0;
+    const nivel = metrics.nivel || 0;
+    const nivel_rvz = metrics.nivel_rvz || 0;
+    const corrente = metrics.corrente || 0; // Usando 'corrente' como base para o status da bomba
 
     return {
         isReal: true,
-        nome_estacao: latestRow.nome_estacao,
+        nome_estacao: stationName,
         pressao_suc: parseFloat(pressao_suc.toFixed(2)),
-        // A pressão de recalque não está no Elipse, usaremos a do Zeus mais tarde.
         modo_controle: modoControleStr, 
-        // Mapeamento para os campos do Mock
         nivel_rsv_inferior: parseFloat(nivel_rvz.toFixed(2)), 
-        nivel_rsv_superior_nome: "RVZ", // Baseado no campo nivel_rvz
+        nivel_rsv_superior_nome: "RVZ", 
         nivel_rsv_superior_valor: nivel, 
-        alarme_ativo: latestRow.falha_comunicacao ? "Falha de Comunicação" : "OK",
+        // Adaptação: Verifica se a métrica 'falha_comunicacao_ativa' foi setada
+        alarme_ativo: metrics.falha_comunicacao_ativa ? "Falha de Comunicação" : "OK",
         
-        // Mock dos outros campos Elipse esperados pelo Frontend
+        // Mocks
         bombas: { b1: corrente > 0, b2: false, b3: false }, 
         horimetro_b1: 1000, partidas_b1_24h: 5, 
         horimetro_b2: 1000, partidas_b2_24h: 5, 
