@@ -31,7 +31,6 @@ function aggregateZeusData(zeusRows) {
     };
 }
 
-// NOVO: Refinando a função aggregateElipseData
 function aggregateElipseData(elipseRows) {
    if (elipseRows.length === 0) {
         return { isReal: false };
