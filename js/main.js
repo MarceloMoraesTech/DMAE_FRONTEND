@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  currentStationData = stations[0]; 
                 await initializeComparisonCharts(currentStationData); 
                 const defaultStationItem = stationsMenu?.querySelector(`.station-item[data-id="${currentStationData.id}"]`);
-                if (defaultStationItem) defaultStationItem.click();
+                // if (defaultStationItem) defaultStationItem.click();
             } else {
                  console.warn("Nenhuma estação processada para exibir.");
                  // ... (lógica de UI para 'nenhuma estação')
