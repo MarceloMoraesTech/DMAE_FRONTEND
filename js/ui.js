@@ -421,7 +421,7 @@ function renderZeusData(station) {
     });
 }
 
-function renderElipseData(station) {
+export function renderElipseData(station) {
     renderElipseKPIs(station);
     renderElipseDiagram(station);
     renderElipseStatusChart(station);
@@ -553,7 +553,7 @@ function renderSigesData(station) {
 }
 
 // Lógica para preencher os campos de seleção da aba Comparativo
-function renderComparisonControls(station) {
+export function renderComparisonControls(station) {
     // 1. Obter referências aos containers
     const containerZeus = document.getElementById('comp-select-zeus');
     const containerElipse = document.getElementById('comp-select-elipse');
@@ -822,7 +822,7 @@ export function renderComparisonCharts(station) {
     }
 }
 
-// *** FUNÇÃO ORIGINAL DO CÓDIGO FORNECIDO ***
+
 export function renderStatusChart(stations) {
     const canvas = document.getElementById('status-chart');
     if (!canvas) return;
