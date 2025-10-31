@@ -12,9 +12,25 @@ function aggregateZeusData(zeusRows) {
     
     // Assume-se que o primeiro registro é o mais recente
     const latestRow = zeusRows[0]; 
+    let vazao_ult = 0;
+
+    // Procura o valor de vazão mais recente que não seja null ou 0
+    for (const row of zeusRows) {
+        const vazao = parseFloat(row.vazao_media);
+        if (vazao > 0) {
+            // Se encontrou uma vazão válida e diferente de zero, usa este registro como base
+            latestRow = row;
+            vazao_ult = vazao;
+            break; // Sai do loop assim que encontrar o primeiro valor válido (o mais recente)
+        }
+    }
+    
+    // Se não encontrou nenhuma vazão válida, usa o primeiro registro para pressões e default 0 para vazão
+    if (vazao_ult === 0) {
+        latestRow = zeusRows[0];
+    }
     
     // Converte os campos chave para número
-    const vazao_ult = parseFloat(latestRow.vazao_media) || 0;
     const pressao_succao_ult = parseFloat(latestRow.pressao_succao) || 0;
     const pressao_recal_ult = parseFloat(latestRow.pressao_recal) || 0;
     
