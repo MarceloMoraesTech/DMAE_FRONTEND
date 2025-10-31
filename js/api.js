@@ -95,6 +95,8 @@ function aggregateElipseData(elipseRows) {
         }
     });
 
+    console.log(metrics, 'METRICS')
+
     // --- 2. Criação do Objeto de Estação ---
 
     const modoControleCode = metrics.modo_controle || 0;
@@ -106,6 +108,8 @@ function aggregateElipseData(elipseRows) {
     const nivel_rvz = metrics.nivel_rvz || 0;
     // O status da bomba b1 é determinado pela sua corrente (o mais robusto)
     const corrente_b1 = metrics.corrente_b1 || 0; 
+
+    console.log(corrente_b1)
 
     return {
         isReal: true,
