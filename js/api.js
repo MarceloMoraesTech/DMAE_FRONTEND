@@ -309,7 +309,7 @@ export async function fetchAllStations() {
         // Faz as duas chamadas em paralelo (melhor performance)
         const [allDataResponse, faturamentoData] = await Promise.all([
             fetch(`${API_BASE_URL}/data/all`),
-            fetchFaturamentoForMonth('2025-10') // <-- Use o mês/ano que deseja faturar
+            fetchFaturamentoForMonth('2025-09') // <-- Use o mês/ano que deseja faturar
         ]);
 
         if (!allDataResponse.ok) {
