@@ -35,81 +35,49 @@ function aggregateElipseData(elipseRows) {
    if (elipseRows.length === 0) {
         return { isReal: false };
     }
+
+   const latestRow = elipseRows[0];
     
-    // 1. Converte o array de pares chave-valor em um objeto de métricas
-    // Agrupa todos os pares chave-valor em um único objeto 'metrics'
+    // *** PASSO 2: Mapeamento Direto das Colunas do latestRow para 'metrics' ***
+    
+    const stationName = latestRow.nome_estacao || 'Estação Elipse (Nome Indefinido)';
+    
     const metrics = {};
-    let stationName = 'Estação Elipse (Nome Indefinido)';
+
+    // Mapeamento dos campos (Convertendo de string para float e tratando null/undefined)
     
-    // Iteramos sobre todas as linhas recebidas para construir o objeto 'metrics'
-    elipseRows.forEach(row => {
-        // Assume que o nome da estação é consistente em todas as linhas
-        if (row.nome_estacao) {
-            stationName = row.nome_estacao;
-        }
-        
-        if (row.nome_variavel) {
-            const nomeVariavel = row.nome_variavel.trim();
-            const valor = row.valor; // Pode ser um número (string) ou [null]
-            const variavelLocal = row.variavel_local ? row.variavel_local.trim().toUpperCase() : '';
+    // Modo de Controle
+    metrics.modo_controle = parseFloat(latestRow.modo_controle) || 0;
+    
+    // Falha de Comunicação: Se o campo 'falha_comunicacao' for null, a falha está ativa.
+    metrics.falha_comunicacao_ativa = latestRow.falha_comunicacao === null; 
 
-            // Mapeamento dos campos:
-            switch (nomeVariavel) {
-                case 'ModoControle':
-                    metrics.modo_controle = parseFloat(valor) || 0;
-                    break;
-                case 'FalhaComunicacao':
-                    // Verifica se a falha é para a estação principal ('Propria Estação')
-                    if (variavelLocal.includes('PROPRIA ESTAÇÃO') || variavelLocal === stationName.toUpperCase()) {
-                         metrics.falha_comunicacao_ativa = true; // Valor é null, a presença indica a falha
-                    }
-                    break;
-                case 'PressaoSuccao':
-                    metrics.pressao_succao = parseFloat(valor) || 0;
-                    break;
-                case 'PressaoRecalque':
-                    // Adicionando o novo campo PressaoRecalque
-                    metrics.pressao_recalque = parseFloat(valor) || 0; 
-                    break;
-                case 'Nivel':
-                    // Assumimos que 'Nivel' com 'RSV Inferior 01' é o 'nivel_rvz' (inferior)
-                    if (variavelLocal.includes('RSV INFERIOR')) {
-                        metrics.nivel_rvz = parseFloat(valor) || 0;
-                    } 
-                    // Assumimos que 'Nivel' com 'Reservatório' é o nível superior
-                    else if (variavelLocal.includes('RESERVATÓRIO')) {
-                        metrics.nivel_superior = parseFloat(valor) || 0;
-                    }
-                    break;
-                case 'Corrente':
-                    // Mapeamento das correntes das bombas
-                    if (variavelLocal.includes('GMB 01')) {
-                        metrics.corrente_b1 = parseFloat(valor) || 0;
-                    } else if (variavelLocal.includes('GMB 02')) {
-                        metrics.corrente_b2 = parseFloat(valor) || 0;
-                    } else if (variavelLocal.includes('GMB 03')) {
-                        metrics.corrente_b3 = parseFloat(valor) || 0;
-                    }
-                    break;
-            }
-        }
-    });
+    // Pressões
+    metrics.pressao_succao = parseFloat(latestRow.pressao_succao) || 0;
+    metrics.pressao_recalque = parseFloat(latestRow.pressao_recalque) || 0; 
+    
+    // Níveis
+    metrics.nivel_rvz = parseFloat(latestRow.nivel_rsv_inferior) || 0; 
+    metrics.nivel_superior = parseFloat(latestRow.nivel_rsv_superior_valor) || 0;
 
-    console.log(metrics, 'METRICS')
+    // Correntes das Bombas
+    metrics.corrente_b1 = parseFloat(latestRow.corrente_gmb1) || 0;
+    metrics.corrente_b2 = parseFloat(latestRow.corrente_gmb2) || 0;
+    metrics.corrente_b3 = parseFloat(latestRow.corrente_gmb3) || 0;
 
-    // --- 2. Criação do Objeto de Estação ---
+    console.log(metrics, 'METRICS AGREGADAS DO REGISTRO MAIS RECENTE');
+
+    // --- 3. Criação do Objeto de Estação (Lógica de Retorno) ---
 
     const modoControleCode = metrics.modo_controle || 0;
     const modoControleStr = modoControleCode === 2 ? "Remoto Automático" : (modoControleCode === 1 ? "Local" : "N/D");
     
-    // Os valores extraídos do objeto 'metrics' (garantindo que não sejam undefined)
     const pressao_suc = metrics.pressao_succao || 0;
     const nivel_superior = metrics.nivel_superior || 0;
     const nivel_rvz = metrics.nivel_rvz || 0;
-    // O status da bomba b1 é determinado pela sua corrente (o mais robusto)
     const corrente_b1 = metrics.corrente_b1 || 0; 
-
-    console.log(corrente_b1)
+    
+    console.log(`Corrente B1 no Registro: ${corrente_b1}`);
 
     return {
         isReal: true,
@@ -118,21 +86,27 @@ function aggregateElipseData(elipseRows) {
         
         // Mapeamento para os campos da UI
         modo_controle: modoControleStr, 
-        nivel_rsv_inferior: parseFloat(nivel_rvz.toFixed(2)), // nível RSV Inferior
-        nivel_rsv_superior_nome: "Reservatório", // Nome baseado na lógica do banco
-        nivel_rsv_superior_valor: nivel_superior, // nível superior
+        nivel_rsv_inferior: parseFloat(nivel_rvz.toFixed(2)), 
+        nivel_rsv_superior_nome: latestRow.nivel_rsv_superior_nome || "Reservatório",
+        nivel_rsv_superior_valor: parseFloat(nivel_superior.toFixed(2)),
         alarme_ativo: metrics.falha_comunicacao_ativa ? "Falha de Comunicação" : "OK",
         
-        // Mocks e Lógica de Bombas (usando correntes mapeadas)
-        bombas: { b1: corrente_b1 > 0, b2: (metrics.corrente_b2 || 0) > 0, b3: (metrics.corrente_b3 || 0) > 0 }, 
+        // Lógica de Bombas (usando um limite razoável, ex: > 5.0)
+        bombas: { 
+            b1: metrics.corrente_b1 > 5.0, 
+            b2: metrics.corrente_b2 > 5.0, 
+            b3: metrics.corrente_b3 > 5.0 
+        }, 
+        
+        // Mocks (dados estáticos)
         horimetro_b1: 1000, partidas_b1_24h: 5, 
         horimetro_b2: 1000, partidas_b2_24h: 5, 
         horimetro_b3: 1000, partidas_b3_24h: 5, 
         limites: { pressao_rec_max: 95, nivel_sup_min: 1.0 }, 
         station_alerts: [],
         
-        // Incluir pressão de recalque do Elipse
-        pressao_rec: metrics.pressao_recalque || 0, // Novo! Usaremos ela na próxima correção.
+        // Pressão de Recalque do Elipse
+        pressao_rec: parseFloat((metrics.pressao_recalque || 0).toFixed(2)), 
     };
 }
 
