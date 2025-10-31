@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAppInitialized = false;
     let currentStationData = null; // Guarda os dados detalhados da estação selecionada
 
+    // --- NOVAS CONSTANTES E FUNÇÕES AUXILIARES ---
+    const DEFAULT_START_DATE_STR = '2025-09-16'; // Formato YYYY-MM-DD
+    const DEFAULT_END_DATE_STR = '2025-09-17'; // Formato YYYY-MM-DD
+    
+    function initializeDateInputs() {
+        const startDateInput = document.getElementById('comp-start-date');
+        const endDateInput = document.getElementById('comp-end-date');
+        
+        // Define os valores padrão nos inputs do DOM
+        if (startDateInput) startDateInput.value = DEFAULT_START_DATE_STR;
+        if (endDateInput) endDateInput.value = DEFAULT_END_DATE_STR;
+    }
+
     // --- Lógica de Autenticação ---
     loginBtn?.addEventListener('click', async () => {
          console.log("Botão Entrar clicado.");
@@ -45,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Função de Inicialização Principal ---
     async function initializeApp() {
+        initializeDateInputs();
         if (tableLoader) ui.toggleLoading(tableLoader, true);
         try {
             // Agora, fetchAllStations() busca os dados da API REAL.
@@ -63,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
                  ui.renderStatusChart(stations);
                  initMap(stations);
                  sortAndRenderTable();
+                 currentStationData = stations[0]; 
+                await initializeComparisonCharts(currentStationData); 
+                const defaultStationItem = stationsMenu?.querySelector(`.station-item[data-id="${currentStationData.id}"]`);
+                if (defaultStationItem) defaultStationItem.click();
             } else {
                  console.warn("Nenhuma estação processada para exibir.");
                  // ... (lógica de UI para 'nenhuma estação')
@@ -92,7 +110,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function initializeComparisonCharts(stationData) {
+        if (!stationData) return;
+
+        try {
+            console.log(`LÓGICA INICIAL: Buscando dados históricos da estação ${stationData.id} para ${DEFAULT_START_DATE_STR} - ${DEFAULT_END_DATE_STR}...`);
+            const historicalData = await api.getHistoricalData(
+                stationData.id, 
+                DEFAULT_START_DATE_STR, 
+                DEFAULT_END_DATE_STR
+            );
+
+            if (historicalData) {
+                // Certifica que as estruturas existem e define isReal = true (necessário para ui.js)
+                currentStationData.zeus = currentStationData.zeus || { isReal: true, chartData: {} };
+                currentStationData.elipse = currentStationData.elipse || { isReal: true, historyChartData: {} };
+
+                // Armazena os dados históricos recebidos
+                currentStationData.zeus.chartData = historicalData.zeus?.chartData || { labels: [] };
+                currentStationData.elipse.historyChartData = historicalData.elipse?.historyChartData || { labels: [] };
+                // *** ATUALIZAÇÃO PARA DINAMIZAÇÃO DO ELIPSE - 2.1 ***
+                // Armazena os dados mais recentes do Elipse para o 'Diagrama Elipse'
+                currentStationData.elipse.latestData = historicalData.elipse?.latestData || {}; 
+
+                console.log("LÓGICA INICIAL: Dados históricos e de diagrama recebidos.");
+            } else {
+                console.warn("API de gráficos não retornou dados válidos para a inicialização.");
+            }
+
+        } catch (error) {
+            console.error("Erro ao carregar gráficos iniciais:", error);
+        }
+    }
+
     // --- Gerenciamento de Eventos ---
+
+    if(stationsMenu) {
+        stationsMenu.addEventListener('click', async (e) => { // Tornar async
+            const stationItem = e.target.closest('.station-item');
+            if (stationItem && stationItem.dataset.id) {
+                if(navMenu) navMenu.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                stationsMenu.querySelectorAll('.station-item').forEach(item => item.classList.remove('active'));
+                stationItem.classList.add('active');
+                
+                const stationId = parseInt(stationItem.dataset.id);
+                currentStationData = allStations.find(s => s.id === stationId); 
+                
+                if (currentStationData) {
+                    // *** 2.2: Busca novos dados ao trocar de estação, se não tiverem sido carregados ***
+                    // Isso é importante para garantir que currentStationData.elipse.latestData exista
+                    // antes de chamar ui.showStationDetailPage
+                    if (!currentStationData.elipse || !currentStationData.elipse.latestData) {
+                        await initializeComparisonCharts(currentStationData); 
+                    }
+                    
+                    // 1. Garante que as sub-estruturas existam e isReal=true.
+                    currentStationData.zeus = currentStationData.zeus || { isReal: true, chartData: {} };
+                    currentStationData.elipse = currentStationData.elipse || { isReal: true, latestData: {} };
+                    
+                    if(pageTitle) pageTitle.textContent = currentStationData.name;
+                    ui.showStationDetailPage(currentStationData); 
+                } else {
+                    alert(`Não foi possível encontrar os dados detalhados para a estação ID ${stationId} na lista carregada.`);
+                    if(pageTitle) pageTitle.textContent = "Erro ao Carregar";
+                }
+            }
+        });
+    }
+    
+    // ATUALIZAÇÃO NO EVENT LISTENER DA TABELA (ANALISE_TBODY)
+    if(analiseTbody) {
+        analiseTbody.addEventListener('click', async (e) => { // Tornar async
+            const stationLink = e.target.closest('.station-link');
+            if (stationLink && stationLink.dataset.id) {
+                e.preventDefault();
+                const stationId = parseInt(stationLink.dataset.id);
+
+                currentStationData = allStations.find(s => s.id === stationId);
+                
+                if (currentStationData) {
+                    // *** 2.2: Busca novos dados ao trocar de estação, se não tiverem sido carregados ***
+                    if (!currentStationData.elipse || !currentStationData.elipse.latestData) {
+                        await initializeComparisonCharts(currentStationData);
+                    }
+                    
+                    // 1. Garante que as sub-estruturas existam e isReal=true.
+                    currentStationData.zeus = currentStationData.zeus || { isReal: true, chartData: {} };
+                    currentStationData.elipse = currentStationData.elipse || { isReal: true, latestData: {} };
+
+                    if(pageTitle) pageTitle.textContent = currentStationData.name;
+                    ui.showStationDetailPage(currentStationData);
+                    
+                    // ... (Atualiza o menu lateral para refletir a seleção - inalterado)
+                } else {
+                    alert(`Não foi possível encontrar os dados detalhados para a estação ID ${stationId} na lista carregada.`);
+                    if(pageTitle) pageTitle.textContent = "Erro ao Carregar";
+                }
+            }
+        });
+    }
 
     // Event listener para o KPI de Alertas no Dashboard Geral
     if (kpiAlertasCard) {
