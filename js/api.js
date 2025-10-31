@@ -1,5 +1,5 @@
 // Importa os dados do nosso backend simulado (usado como fallback)
-// import * as backend from './backend-simulator.js';
+import * as backend from './backend-simulator.js';
 
 // --- API REAL ---
 // URL base da API que eles passaram
