@@ -11,7 +11,7 @@ function aggregateZeusData(zeusRows) {
     }
     
     // Assume-se que o primeiro registro é o mais recente
-    const latestRow = zeusRows[0]; 
+    let latestRow = zeusRows[0]; 
     let vazao_ult = 0;
 
     // Procura o valor de vazão mais recente que não seja null ou 0
