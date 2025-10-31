@@ -93,9 +93,9 @@ function aggregateElipseData(elipseRows) {
         
         // Lógica de Bombas (usando um limite razoável, ex: > 5.0)
         bombas: { 
-            b1: metrics.corrente_b1 > 5.0, 
-            b2: metrics.corrente_b2 > 5.0, 
-            b3: metrics.corrente_b3 > 5.0 
+            b1: metrics.corrente_b1 > 0, 
+            b2: metrics.corrente_b2 > 0, 
+            b3: metrics.corrente_b3 > 0 
         }, 
         
         // Mocks (dados estáticos)
